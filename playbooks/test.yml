@@ -1,8 +1,0 @@
-- name: Test variable loading
-  hosts: localhost
-  vars_files:
-    - ../group_vars/all.yml  # ✅ Explicitly load variables
-  tasks:
-    - name: Debug i3_packages
-      debug:
-        var: i3_packages

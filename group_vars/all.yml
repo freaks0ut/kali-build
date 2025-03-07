@@ -1,7 +1,6 @@
 i3_packages:
-  - i3-gaps
+  - kali-desktop-i3-gaps
   - i3blocks
-  - i3lock
   - rofi
   - feh
   - picom
@@ -11,7 +10,6 @@ i3_packages:
   - thunar
   - dunst
   - ranger
-  - neofetch
   - ninja-build  # Installing Ninja
 
 fonts_dir: "~/.local/share/fonts"

@@ -1,7 +1,3 @@
-- name: Debug i3_packages
-  debug:
-    var: i3_packages
-
 - name: Install i3-gaps and required packages
   become: yes
   apt:
