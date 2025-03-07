@@ -22,7 +22,6 @@ arc_theme_packages:
   - papirus-icon-theme
 
 zsh_plugins:
-  - "git"
   - "zsh-autosuggestions"
   - "zsh-syntax-highlighting"
 
