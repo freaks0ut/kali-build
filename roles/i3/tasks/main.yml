@@ -1,0 +1,8 @@
+- import_tasks: install_dependencies.yml
+- import_tasks: install_i3.yml
+- import_tasks: configure_i3.yml
+- import_tasks: install_fonts.yml
+- import_tasks: set_background.yml
+- import_tasks: install_zsh.yml
+- import_tasks: set_theme.yml
+- import_tasks: finalize.yml

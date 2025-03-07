@@ -1,0 +1,12 @@
+- name: Refresh system cache
+  command: "fc-cache -fv"
+
+- name: Check if i3 is running
+  command: pgrep -x i3
+  register: i3_running
+  changed_when: false
+  failed_when: i3_running.rc not in [0, 1]  # Suppresses failure when i3 is not running
+
+- name: Restart i3 if running
+  command: DISPLAY=:0 i3-msg restart
+  when: i3_running.rc == 0

@@ -1,0 +1,21 @@
+- name: Ensure Nerd Fonts directory exists
+  file:
+    path: "{{ fonts_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Download and install Nerd Fonts
+  get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ item }}.zip"
+    dest: "/tmp/{{ item }}.zip"
+  loop: "{{ nerd_fonts }}"
+
+- name: Extract Nerd Fonts
+  unarchive:
+    src: "/tmp/{{ item }}.zip"
+    dest: "{{ fonts_dir }}"
+    remote_src: yes
+  loop: "{{ nerd_fonts }}"
+
+- name: Refresh font cache
+  command: fc-cache -fv

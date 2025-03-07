@@ -1,0 +1,6 @@
+- name: Install i3-gaps and required packages
+  become: yes
+  apt:
+    name: "{{ i3_packages }}"
+    state: present
+    update_cache: yes

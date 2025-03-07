@@ -1,0 +1,14 @@
+- name: Copy wallpaper to system location
+  copy:
+    src: "files/wallpapers/kali.jpg"
+    dest: "{{ background_image }}"
+    mode: '0644'
+
+- name: Set desktop background using feh
+  command: "feh --bg-scale {{ background_image }}"
+
+- name: Ensure feh sets background on startup
+  lineinfile:
+    path: "~/.config/i3/config"
+    line: "exec --no-startup-id feh --bg-scale {{ background_image }}"
+    create: yes
