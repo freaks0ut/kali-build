@@ -1,0 +1,4 @@
+- name: Setup Kali Linux with i3
+  hosts: localhost
+  roles:
+    - i3
