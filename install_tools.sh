@@ -1,78 +1,97 @@
 #!/bin/bash
 
 # Set variables
+log_file="/var/log/pentest_install.log"
+error_file="/var/log/pentest_install_errors.log"
 tools_dir="/opt/tools"
 scripts_dir="/opt/scripts"
+wordlists_dir="/opt/wordlists"
 
-echo "[+] Erstelle Verzeichnisstruktur..."
-sudo mkdir -p $tools_dir/{recon,web,ad,shells,privilege_escalation,networking,post_exploitation,blue_team,bug_bounty}
-sudo mkdir -p $scripts_dir/{recon,exploit,automation}
-sudo chown -R $USER:$USER $tools_dir $scripts_dir
+# Colors for output
+GREEN="\e[32m"
+RED="\e[31m"
+NC="\e[0m" # No Color
+
+# Create log files
+sudo touch $log_file $error_file
+sudo chmod 666 $log_file $error_file
+
+# Log function
+log() {
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') - $1" | tee -a "$log_file"
+}
+
+log_error() {
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') - ERROR: $1" | tee -a "$error_file"
+}
 
 # Funktion zur Überprüfung, ob ein Tool installiert ist
 is_installed() {
-    command -v "$1" &> /dev/null
+    dpkg -l | grep -q "^ii  $1 "
 }
 
+log "[+] Erstelle Verzeichnisstruktur..."
+sudo mkdir -p $tools_dir/{recon,web,ad,shells,privilege_escalation,networking,post_exploitation,blue_team,bug_bounty}
+sudo mkdir -p $scripts_dir/{recon,exploit,automation}
+sudo mkdir -p $wordlists_dir
+sudo chown -R $USER:$USER $tools_dir $scripts_dir $wordlists_dir
+
 # Install required dependencies
-echo "[+] Installiere benötigte Pakete..."
-sudo apt update && sudo apt install -y python3-pip python3-venv git netcat ruby-full proxychains \
-    openjdk-17-jdk code ripgrep firefox 
+packages=("python3-pip" "python3-venv" "git" "netcat-traditional" "ruby-full" "proxychains" \
+          "openjdk-17-jdk" "code" "ripgrep" "firefox-esr")
 
-# === Reconnaissance Tools ===
-echo "[+] Installiere Reconnaissance-Tools..."
-git clone https://github.com/unknown/nxc.git $tools_dir/recon/nxc
+for package in "${packages[@]}"; do
+    if ! is_installed "$package"; then
+        log "[+] Installiere $package..."
+        if sudo apt install -y "$package" >> "$log_file" 2>> "$error_file"; then
+            log "${GREEN}[✓] $package installiert${NC}"
+        else
+            log_error "Fehler bei der Installation von $package"
+            echo -e "${RED}[✗] $package fehlgeschlagen${NC}"
+        fi
+    else
+        log "${GREEN}[✓] $package ist bereits installiert, überspringe.${NC}"
+    fi
+done
 
-# === Web Application Testing Tools ===
-echo "[+] Installiere Web Application Testing-Tools..."
-git clone https://github.com/maurosoria/dirsearch.git $tools_dir/web/dirsearch
-cd $tools_dir/web/dirsearch
-python3 -m venv --without-pip dirsearch-venv
-source dirsearch-venv/bin/activate
-curl https://bootstrap.pypa.io/get-pip.py | python
-pip install -r requirements.txt
+# Install other tools with error handling
+install_tool() {
+    local repo="$1"
+    local dir="$2"
+    local install_cmd="$3"
+    log "[+] Installiere $dir..."
+    if [ ! -d "$dir" ]; then
+        if git clone "$repo" "$dir" >> "$log_file" 2>> "$error_file"; then
+            log "${GREEN}[✓] $dir erfolgreich installiert${NC}"
+            if [ -n "$install_cmd" ]; then
+                eval "$install_cmd" >> "$log_file" 2>> "$error_file"
+            fi
+        else
+            log_error "Fehler beim Klonen von $repo"
+            echo -e "${RED}[✗] $dir fehlgeschlagen${NC}"
+        fi
+    else
+        log "${GREEN}[✓] $dir ist bereits vorhanden, überspringe.${NC}"
+    fi
+}
 
-echo 'alias dirsearch="~/dirsearch-venv/bin/python ~/dirsearch/dirsearch.py"' >> ~/.bashrc
-source ~/.bashrc
+# Install tools
+install_tool "https://github.com/Pennyw0rth/NetExec.git" "$tools_dir/recon/nxc" "cd $tools_dir/recon/nxc && pip3 install -r requirements.txt"
+install_tool "https://github.com/maurosoria/dirsearch.git" "$tools_dir/web/dirsearch" "cd $tools_dir/web/dirsearch && python3 -m venv dirsearch-venv && source dirsearch-venv/bin/activate && pip install -r requirements.txt"
+install_tool "https://github.com/CravateRouge/bloodyAD.git" "$tools_dir/ad/bloodyAD"
+install_tool "https://github.com/ShutdownRepo/pywhisker.git" "$tools_dir/ad/pywhisker" "cd $tools_dir/ad/pywhisker && pip3 install -r requirements.txt"
+install_tool "https://github.com/SecureAuthCorp/impacket.git" "$tools_dir/ad/impacket" "cd $tools_dir/ad/impacket && pip3 install ."
+install_tool "https://github.com/danielmiessler/SecLists.git" "$wordlists_dir/SecLists"
 
-# === Active Directory Tools ===
-echo "[+] Installiere Active Directory-Tools..."
-git clone https://github.com/CravateRouge/bloodyAD.git $tools_dir/ad/bloodyAD
-git clone https://github.com/unknown/pywhisker.git $tools_dir/ad/pywhisker
-git clone https://github.com/SecureAuthCorp/impacket.git $tools_dir/ad/impacket
-cd $tools_dir/ad/impacket && pip3 install .
-pip3 install certipy-ad
-
-# === Browser Plugins ===
-echo "[+] Installiere Firefox-Erweiterungen..."
-firefox -install-global-extension https://addons.mozilla.org/firefox/downloads/latest/foxyproxy-standard/latest.xpi
-firefox -install-global-extension https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi
-firefox -install-global-extension https://addons.mozilla.org/firefox/downloads/latest/cookie-editor/latest.xpi
-firefox -install-global-extension https://addons.mozilla.org/firefox/downloads/latest/webalyzer/latest.xpi
-
-# === ProxyChains Configuration ===
-echo "[+] Konfiguriere ProxyChains..."
-sudo sed -i 's/socks4 127.0.0.1 9050/socks5 127.0.0.1 1080/' /etc/proxychains.conf
-
-# === Zertifikate ===
-echo "[+] Installiere ZAP Zertifikat..."
-wget -O $tools_dir/web/zap_certificate.pem https://www.zaproxy.org/CA/zap-cert.pem
-
-echo "[+] Konfiguriere BurpSuite Zertifikat für Firefox..."
-wget -O /tmp/cacert.der http://burp/cert
-certutil -d sql:$HOME/.mozilla/firefox/*.default-release -A -t "C,," -n "BurpSuite" -i /tmp/cacert.der
-
-# === Swap File Setup ===
-echo "[+] Erstelle Swap-Datei..."
-sudo swapoff -a
-sudo rm -f /swapfile
-sudo touch /swapfile
-sudo chmod 600 /swapfile
-sudo chattr +C /swapfile
-sudo fallocate -l 4G /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+# ProxyChains Configuration
+log "[+] Konfiguriere ProxyChains..."
+if sudo sed -i 's/socks4 127.0.0.1 9050/socks5 127.0.0.1 1080/' /etc/proxychains.conf >> "$log_file" 2>> "$error_file"; then
+    log "${GREEN}[✓] ProxyChains konfiguriert${NC}"
+else
+    log_error "Fehler bei der ProxyChains-Konfiguration"
+    echo -e "${RED}[✗] ProxyChains Konfiguration fehlgeschlagen${NC}"
+fi
 
 # Abschluss
-echo "[+] Installation abgeschlossen!"
+log "[+] Installation abgeschlossen!"
+echo -e "${GREEN}[✓] Installation abgeschlossen${NC}"
