@@ -1,4 +1,6 @@
 - name: Setup Kali Linux with i3
   hosts: localhost
+  vars_files:
+    - ../group_vars/all.yml  # ✅ Explicitly load variables
   roles:
     - i3
