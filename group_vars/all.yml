@@ -1,0 +1,37 @@
+i3_packages:
+  - i3-gaps
+  - i3blocks
+  - i3lock
+  - rofi
+  - feh
+  - picom
+  - xclip
+  - lxappearance
+  - alacritty
+  - thunar
+  - dunst
+  - ranger
+  - neofetch
+  - ninja-build  # Installing Ninja
+
+fonts_dir: "~/.local/share/fonts"
+nerd_fonts:
+  - "FiraCode"
+  - "JetBrainsMono"
+
+arc_theme_packages:
+  - arc-theme
+  - papirus-icon-theme
+
+zsh_plugins:
+  - "git"
+  - "zsh-autosuggestions"
+  - "zsh-syntax-highlighting"
+
+background_image: "/usr/share/backgrounds/kali.jpg"
+
+config_dirs:
+  - "~/.config/i3"
+  - "~/.config/alacritty"
+  - "~/.config/compton"
+  - "~/.config/rofi"
