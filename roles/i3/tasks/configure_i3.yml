@@ -1,0 +1,30 @@
+- name: Ensure i3 configuration directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ config_dirs }}"
+
+- name: Deploy i3 configuration file
+  copy:
+    src: "files/i3/config"
+    dest: "{{ config_dirs[0] }}/config"
+    mode: '0644'
+
+- name: Deploy Alacritty configuration
+  copy:
+    src: "files/alacritty/alacritty.toml"
+    dest: "{{ config_dirs[1] }}/alacritty.toml"
+    mode: '0644'
+
+- name: Deploy Compton (Picom) configuration
+  copy:
+    src: "files/compton/compton.conf"
+    dest: "{{ config_dirs[2] }}/compton.conf"
+    mode: '0644'
+
+- name: Deploy Rofi configuration
+  copy:
+    src: "files/rofi/config.rasi"
+    dest: "{{ config_dirs[3] }}/config.rasi"
+    mode: '0644'

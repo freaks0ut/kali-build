@@ -1,0 +1,5 @@
+- name: Refresh system cache
+  command: "fc-cache -fv"
+
+- name: Restart i3
+  command: "i3-msg restart"

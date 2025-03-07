@@ -1,0 +1,22 @@
+- name: Install Arc-Theme and Icons
+  become: yes
+  apt:
+    name: "{{ arc_theme_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Apply Arc-Theme for GTK
+  command: "gsettings set org.gnome.desktop.interface gtk-theme 'Arc-Dark'"
+
+- name: Apply Papirus Icons
+  command: "gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'"
+
+- name: Ensure Arc-Theme is persistently set
+  lineinfile:
+    path: "~/.profile"
+    line: "export GTK_THEME=Arc-Dark"
+
+- name: Ensure Papirus Icons are persistently set
+  lineinfile:
+    path: "~/.profile"
+    line: "export ICON_THEME=Papirus-Dark"

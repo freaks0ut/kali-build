@@ -1,0 +1,23 @@
+- name: Install Zsh
+  become: yes
+  apt:
+    name: "zsh"
+    state: present
+    update_cache: yes
+
+- name: Install Oh-My-Zsh
+  shell: |
+    RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  args:
+    creates: "~/.oh-my-zsh"
+
+- name: Set Zsh as default shell
+  user:
+    name: "{{ ansible_user_id }}"
+    shell: "/usr/bin/zsh"
+
+- name: Install Zsh plugins
+  git:
+    repo: "https://github.com/zsh-users/{{ item }}.git"
+    dest: "~/.oh-my-zsh/custom/plugins/{{ item }}"
+  loop: "{{ zsh_plugins }}"
