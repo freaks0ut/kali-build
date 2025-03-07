@@ -32,3 +32,4 @@ config_dirs:
   - "~/.config/alacritty"
   - "~/.config/compton"
   - "~/.config/rofi"
+

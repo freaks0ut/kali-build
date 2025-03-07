@@ -1,0 +1,116 @@
+[env]
+TERM = "xterm-256color"
+
+[shell]
+program = "/usr/bin/zsh"
+args = ["--login"]
+
+[window]
+dimensions = { columns = 0, lines = 0 }
+padding = { x = 12, y = 12 }
+dynamic_padding = true
+decorations = "None"
+opacity = 1.0
+blur = true
+dynamic_title = true
+resize_increments = false
+
+[scrolling]
+history = 65535
+
+[font]
+normal = { family = "Iosevka Nerd Font", style = "Regular" }
+bold = { family = "Iosevka Nerd Font", style = "Bold" }
+italic = { family = "Iosevka Nerd Font", style = "Italic" }
+bold_italic = { family = "Iosevka Nerd Font", style = "Bold Italic" }
+size = 12  # Adjust size as needed
+
+offset = { x = 0, y = 0 }
+builtin_box_drawing = true
+
+[colors.primary]
+background = '0x000000'
+foreground = '0xeaeaea'
+
+#dim_foreground = "#CDD6F4"
+#bright_foreground = "#CDD6F4"
+
+[colors.cursor]
+#text = "#1E1E2E"
+#cursor = "#F5E0DC"
+
+[colors.selection]
+text = "#1E1E2E"
+background = "#F5E0DC"
+
+[colors.normal]
+black =   '0x000000'
+red =     '0xd54e53'
+green =   '0xb9ca4a'
+yellow =  '0xe6c547'
+blue =    '0x7aa6da'
+magenta = '0xc397d8'
+cyan =    '0x70c0ba'
+white =   '0xeaeaea'
+
+[colors.bright]
+black =   '0x666666'
+red =     '0xff3334'
+green =   '0x9ec400'
+yellow =  '0xe7c547'
+blue =    '0x7aa6da'
+magenta = '0xb77ee0'
+cyan =    '0x54ced6'
+white =   '0xffffff'
+
+[colors]
+indexed_colors = [
+ # { index = 16, color = "#FAB387" },
+ # { index = 17, color = "#F5E0DC" },
+]
+draw_bold_text_with_bright_colors = true
+
+[selection]
+save_to_clipboard = true
+
+[cursor.style]
+shape = "Beam"
+blinking = "Always"
+
+[cursor]
+blink_interval = 500
+blink_timeout = 0
+
+[mouse]
+bindings = [
+  { mouse = "Middle", action = "Paste" },
+]
+hide_when_typing = false
+
+[keyboard]
+bindings = [
+  { key = "V", mods = "Control|Shift", action = "Paste" },
+  { key = "C", mods = "Control|Shift", action = "Copy" },
+  { key = "Paste", action = "Paste" },
+  { key = "Copy", action = "Copy" },
+  { key = "Insert", mods = "Shift", action = "PasteSelection" },
+  { key = "F", mods = "Control|Shift", action = "SearchForward", mode = "~Search" },
+  { key = "B", mods = "Control|Shift", action = "SearchBackward", mode = "~Search" },
+  { key = "Key0", mods = "Control", action = "ResetFontSize" },
+  { key = "Equals", mods = "Control", action = "IncreaseFontSize" },
+  { key = "Minus", mods = "Control", action = "DecreaseFontSize" },
+  { key = "L", mods = "Control", action = "ClearLogNotice" },
+  { key = "L", mods = "Control", chars = "\f" },
+  { key = "PageUp", mods = "Shift", action = "ScrollPageUp", mode = "~Alt" },
+  { key = "PageDown", mods = "Shift", action = "ScrollPageDown", mode = "~Alt" },
+  { key = "Up", mods = "Shift", action = "ScrollLineUp", mode = "~Alt" },
+  { key = "Down", mods = "Shift", action = "ScrollLineDown", mode = "~Alt" },
+  { key = "Home", mods = "Shift", action = "ScrollToTop", mode = "~Alt" },
+  { key = "End", mods = "Shift", action = "ScrollToBottom", mode = "~Alt" },
+]
+
+[debug]
+log_level = "Warn"
+
+[bell]
+duration = 0
