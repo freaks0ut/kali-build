@@ -4,18 +4,41 @@
     state: directory
     mode: '0755'
 
-- name: Download and install Nerd Fonts
+- name: Download Iosevka Nerd Font
   get_url:
-    url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ item }}.zip"
-    dest: "/tmp/{{ item }}.zip"
-  loop: "{{ nerd_fonts }}"
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Iosevka.zip"
+    dest: "/tmp/Iosevka.zip"
+    mode: '0644'
+  when: "'Iosevka' in nerd_fonts"
 
-- name: Extract Nerd Fonts
+- name: Download RobotoMono Nerd Font
+  get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/RobotoMono.zip"
+    dest: "/tmp/RobotoMono.zip"
+    mode: '0644'
+  when: "'RobotoMono' in nerd_fonts"
+
+- name: Extract Iosevka Nerd Font
   unarchive:
-    src: "/tmp/{{ item }}.zip"
+    src: "/tmp/Iosevka.zip"
     dest: "{{ fonts_dir }}"
     remote_src: yes
-  loop: "{{ nerd_fonts }}"
+  when: "'Iosevka' in nerd_fonts"
+
+- name: Extract RobotoMono Nerd Font
+  unarchive:
+    src: "/tmp/RobotoMono.zip"
+    dest: "{{ fonts_dir }}"
+    remote_src: yes
+  when: "'RobotoMono' in nerd_fonts"
 
 - name: Refresh font cache
   command: fc-cache -fv
+
+- name: Remove font zip files
+  file:
+    path: "/tmp/{{ item }}.zip"
+    state: absent
+  loop:
+    - Iosevka
+    - RobotoMono

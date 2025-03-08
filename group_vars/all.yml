@@ -33,3 +33,7 @@ config_dirs:
   - "~/.config/compton"
   - "~/.config/rofi"
 
+nerd_fonts:
+  - "Iosevka"
+  - "RobotoMono"
+
