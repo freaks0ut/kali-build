@@ -41,13 +41,6 @@
     dest: "{{ config_dirs[3] }}/config.rasi"
     mode: '0644'
 
-- name: Ensure Rofi config is owned by the user
-  file:
-    path: "{{ config_dirs[3] }}/config.rasi"
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
-    mode: '0644'
-
 - name: Deploy Alacritty configuration
   copy:
     src: "files/alacritty/alacritty.toml"
@@ -58,3 +51,23 @@
 
 - name: Migrate Alacritty Config
   command: alacritty migrate
+
+- name: Check if config files exist
+  stat:
+    path: "{{ item }}"
+  register: config_files_status
+  loop:
+    - "{{ config_dirs[0] }}/config"
+    - "{{ config_dirs[0] }}/i3blocks.conf"
+    - "{{ config_dirs[1] }}/alacritty.toml"
+    - "{{ config_dirs[3] }}/config.rasi"
+    - "{{ config_dirs[2] }}/compton.conf"
+
+- name: Ensure all config files are owned by the user
+  file:
+    path: "{{ item.item }}"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0644'
+  loop: "{{ config_files_status.results }}"
+  when: item.stat.exists | default(false) == true

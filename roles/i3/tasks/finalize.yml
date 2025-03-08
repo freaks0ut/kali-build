@@ -2,14 +2,50 @@
   command: "fc-cache -fv"
 
 - name: Check if i3 is running
-  command: pgrep -x i3
-  register: i3_running
+  shell: "pgrep -x i3"
+  register: i3_status
   changed_when: false
-  failed_when: i3_running.rc not in [0, 1]  # Suppresses failure when i3 is not running
+  failed_when: false
 
 - name: Restart i3 if running
-  command: "DISPLAY=:0 i3-msg restart"
+  command: i3-msg restart
+  when: i3_status.rc == 0
   environment:
-    DISPLAY: ":0"
+    DISPLAY: "{{ lookup('env', 'DISPLAY') | default(':0', true) }}"
   ignore_errors: yes
 
+- name: Kill existing Picom process (if running)
+  shell: "pgrep -x picom && pkill -x picom || true"
+  ignore_errors: yes
+
+- name: Ensure no other compositor is running
+  shell: "pgrep -x mutter || pgrep -x xfwm4"
+  register: other_compositor
+  changed_when: false
+  failed_when: false
+
+- name: Kill other compositor if running
+  shell: "pkill -x mutter || pkill -x xfwm4"
+  when: other_compositor.rc == 0
+  ignore_errors: yes
+
+- name: Start Picom compositor (if not running)
+  shell: "pgrep -x picom || picom --config ~/.config/compton/compton.conf -b"
+  when: other_compositor.rc != 0
+  environment:
+    DISPLAY: "{{ lookup('env', 'DISPLAY') | default(':0', true) }}"
+
+- name: Ensure i3 is the default session
+  copy:
+    content: "exec i3"
+    dest: "/home/{{ ansible_user_id }}/.xsession"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0644'
+
+- name: Set i3 as default in LightDM
+  copy:
+    dest: "/etc/X11/default-display-manager"
+    content: "/usr/bin/i3"
+  become: true
+  ignore_errors: yes
