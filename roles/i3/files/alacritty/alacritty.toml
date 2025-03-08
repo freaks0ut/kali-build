@@ -23,7 +23,7 @@ normal = { family = "Iosevka Nerd Font", style = "Regular" }
 bold = { family = "Iosevka Nerd Font", style = "Bold" }
 italic = { family = "Iosevka Nerd Font", style = "Italic" }
 bold_italic = { family = "Iosevka Nerd Font", style = "Bold Italic" }
-size = 14
+size = 20
 
 offset = { x = 0, y = 0 }
 builtin_box_drawing = true

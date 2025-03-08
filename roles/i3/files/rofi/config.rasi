@@ -1,7 +1,7 @@
 configuration {
     modi: "window,run";
     opacity: 30;
-    font: "DejaVu Sans Mono 20";
+    font: "RobotoMono Nerd Font 16";
     lines: 15;
     columns: 3;
     levenshtein-sort: true;
@@ -21,3 +21,4 @@ keybindings {
     kb-row-up: "Up,Control+p,Shift+Tab,Shift+ISO_Left_Tab,Control+s";
     kb-row-down: "Down,Control+n,Control+t";
 }
+
