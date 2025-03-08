@@ -4,3 +4,24 @@
     name: "{{ i3_packages }}"
     state: present
     update_cache: yes
+
+- name: Set i3 as the default session for the user
+  copy:
+    content: "exec i3"
+    dest: "{{ ansible_env.HOME }}/.xsession"
+    mode: '0644'
+
+- name: Set i3 as the default session for LightDM
+  lineinfile:
+    path: "/etc/lightdm/lightdm.conf"
+    line: "user-session=i3"
+    insertafter: "[Seat:*]"
+  become: yes
+
+- name: Set i3 as the default X session
+  command: ln -sf /usr/share/xsessions/i3.desktop /etc/alternatives/x-session-manager
+  become: yes
+
+- name: Update alternatives to use i3
+  command: update-alternatives --set x-session-manager /usr/bin/i3
+  become: yes

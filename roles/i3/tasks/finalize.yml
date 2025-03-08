@@ -8,5 +8,8 @@
   failed_when: i3_running.rc not in [0, 1]  # Suppresses failure when i3 is not running
 
 - name: Restart i3 if running
-  command: DISPLAY=:0 i3-msg restart
-  when: i3_running.rc == 0
+  command: "DISPLAY=:0 i3-msg restart"
+  environment:
+    DISPLAY: ":0"
+  ignore_errors: yes
+
