@@ -16,6 +16,8 @@ fonts_dir: "~/.local/share/fonts"
 nerd_fonts:
   - "FiraCode"
   - "JetBrainsMono"
+  - "Iosevka"
+  - "RobotoMono"
 
 arc_theme_packages:
   - arc-theme
@@ -25,7 +27,7 @@ zsh_plugins:
   - "zsh-autosuggestions"
   - "zsh-syntax-highlighting"
 
-background_image: "/usr/share/backgrounds/kali.jpg"
+background_image: "~/.wallpapers/kali.jpg"
 
 config_dirs:
   - "~/.config/i3"
@@ -33,7 +35,4 @@ config_dirs:
   - "~/.config/compton"
   - "~/.config/rofi"
 
-nerd_fonts:
-  - "Iosevka"
-  - "RobotoMono"
 
