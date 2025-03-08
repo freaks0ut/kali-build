@@ -1,7 +1,7 @@
 [env]
 TERM = "xterm-256color"
 
-[shell]
+[terminal.shell]
 program = "/usr/bin/zsh"
 args = ["--login"]
 
@@ -10,7 +10,7 @@ dimensions = { columns = 0, lines = 0 }
 padding = { x = 12, y = 12 }
 dynamic_padding = true
 decorations = "None"
-opacity = 1.0
+opacity = 0.85
 blur = true
 dynamic_title = true
 resize_increments = false
@@ -23,7 +23,7 @@ normal = { family = "Iosevka Nerd Font", style = "Regular" }
 bold = { family = "Iosevka Nerd Font", style = "Bold" }
 italic = { family = "Iosevka Nerd Font", style = "Italic" }
 bold_italic = { family = "Iosevka Nerd Font", style = "Bold Italic" }
-size = 12  # Adjust size as needed
+size = 8
 
 offset = { x = 0, y = 0 }
 builtin_box_drawing = true
@@ -82,10 +82,10 @@ blink_interval = 500
 blink_timeout = 0
 
 [mouse]
+hide_when_typing = false
 bindings = [
   { mouse = "Middle", action = "Paste" },
 ]
-hide_when_typing = false
 
 [keyboard]
 bindings = [
@@ -114,3 +114,6 @@ log_level = "Warn"
 
 [bell]
 duration = 0
+
+[terminal]
+
