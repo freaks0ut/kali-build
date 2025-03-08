@@ -23,16 +23,11 @@
     path: "files/alacritty/alacritty.toml"
   register: alacritty_config
 
-- name: Show Alacritty config file info
-  debug:
-    var: alacritty_config
-
 - name: Deploy Alacritty configuration
   copy:
     src: "files/alacritty/alacritty.toml"
     dest: "{{ config_dirs[1] }}/alacritty.toml"
     mode: '0644'
-  when: alacritty_config.stat.exists and alacritty_config.stat.size > 0
 
 - name: Deploy Compton (Picom) configuration
   copy:
@@ -51,12 +46,6 @@
     path: "{{ config_dirs[3] }}/config.rasi"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-    mode: '0644'
-
-- name: Deploy Wallpaper
-  copy:
-    src: "files/wallpapers/kali.jpg"
-    dest: "/usr/share/backgrounds/kali.jpg"
     mode: '0644'
 
 - name: Deploy Alacritty configuration

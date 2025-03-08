@@ -1,13 +1,13 @@
 - name: Ensure wallpaper directory exists
   file:
-    path: "~/.wallpaper"
+    path: "~/.wallpapers"
     state: directory
     mode: '0755'
 
 - name: Copy wallpaper to system location
   copy:
     src: "files/wallpapers/kali.jpg"
-    dest: "~/.wallpaper/kali.jpg"
+    dest: "{{ background_image }}"
     mode: '0644'
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
