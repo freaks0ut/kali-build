@@ -4,36 +4,49 @@
     state: directory
     mode: '0755'
 
+- name: Check if Iosevka Nerd Font is installed
+  find:
+    paths: "{{ fonts_dir }}"
+    patterns: "Iosevka*"
+  register: iosevka_installed
+
+- name: Check if RobotoMono Nerd Font is installed
+  find:
+    paths: "{{ fonts_dir }}"
+    patterns: "RobotoMono*"
+  register: roboto_installed
+
 - name: Download Iosevka Nerd Font
   get_url:
     url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Iosevka.zip"
     dest: "/tmp/Iosevka.zip"
     mode: '0644'
-  when: "'Iosevka' in nerd_fonts"
+  when: "'Iosevka' in nerd_fonts and iosevka_installed.matched == 0"
 
 - name: Download RobotoMono Nerd Font
   get_url:
     url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/RobotoMono.zip"
     dest: "/tmp/RobotoMono.zip"
     mode: '0644'
-  when: "'RobotoMono' in nerd_fonts"
+  when: "'RobotoMono' in nerd_fonts and roboto_installed.matched == 0"
 
 - name: Extract Iosevka Nerd Font
   unarchive:
     src: "/tmp/Iosevka.zip"
     dest: "{{ fonts_dir }}"
     remote_src: yes
-  when: "'Iosevka' in nerd_fonts"
+  when: "'Iosevka' in nerd_fonts and iosevka_installed.matched == 0"
 
 - name: Extract RobotoMono Nerd Font
   unarchive:
     src: "/tmp/RobotoMono.zip"
     dest: "{{ fonts_dir }}"
     remote_src: yes
-  when: "'RobotoMono' in nerd_fonts"
+  when: "'RobotoMono' in nerd_fonts and roboto_installed.matched == 0"
 
 - name: Refresh font cache
   command: fc-cache -fv
+  when: iosevka_installed.matched == 0 or roboto_installed.matched == 0
 
 - name: Remove font zip files
   file:
@@ -42,3 +55,4 @@
   loop:
     - Iosevka
     - RobotoMono
+  when: iosevka_installed.matched == 0 or roboto_installed.matched == 0
