@@ -85,6 +85,7 @@ blink_timeout = 0
 hide_when_typing = false
 bindings = [
   { mouse = "Middle", action = "Paste" },
+  { mouse = "Right", action = "Copy" },
 ]
 
 [keyboard]
@@ -117,7 +118,3 @@ duration = 0
 
 [terminal]
 
-[mouse]
-bindings = [
-  { mouse = "Right", action = "Copy" },
-]
