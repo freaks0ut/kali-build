@@ -16,9 +16,9 @@ Ensure that the user has root privileges. You can check this by running:
 ```bash
 whoami
 ```
-If you are not `root`, switch to root or use `sudo`:
+Do not execute this playbook as root, use the default user e.g. kali. If you are root, change to your default user.
 ```bash
-sudo -s
+su username
 ```
 
 ## Installation Steps
