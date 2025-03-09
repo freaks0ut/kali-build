@@ -11,10 +11,10 @@ Before running the playbook, ensure the following requirements are met:
 sudo apt update && sudo apt install -y ansible
 ```
 
-### 2. Verify Root Privileges
+### 2. Get root token
 Ensure that the user has root privileges. You can check this by running:
 ```bash
-whoami
+sudo whoami
 ```
 Do not execute this playbook as root, use the default user e.g. kali. If you are root, change to your default user.
 ```bash
