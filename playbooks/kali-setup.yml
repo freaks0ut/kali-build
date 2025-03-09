@@ -5,3 +5,6 @@
   roles:
     - i3
     - configure-system
+    - wordlists
+    - install-tools
+    #- customize-browser
