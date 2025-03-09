@@ -149,8 +149,8 @@ exec_always --no-startup-id sh ~/.fehbg
 # Start Compton for transparency
 exec_always --no-startup-id compton --config ~/.config/compton/compton.conf -b
 
-# VM Clipboard Fix
-exec_always --no-startup-id ~/.config/i3/clipboard_fix.sh
+# VM Clipboard Fix / VM mount fix
+exec --no-startup-id bash -c "source ~/.xprofile"
 
 # Resize Bindings
 bindsym $mod+Ctrl+Shift+Right resize shrink width 10 px or 10 ppt

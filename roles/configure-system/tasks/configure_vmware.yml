@@ -1,14 +1,66 @@
-- name: Ensure ~/.xprofile exists
+- name: Ensure required directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/systemd/system
+
+- name: Deploy VMware tools system-level systemd service
+  copy:
+    dest: "/etc/systemd/system/vmware-tools.service"
+    content: |
+      [Unit]
+      Description=Restart VMware Tools & Mount Shared Folders
+      After=multi-user.target
+
+      [Service]
+      ExecStart=/usr/local/sbin/restart-vm-tools
+      ExecStartPost=/usr/local/sbin/mount-shared-folders
+      ExecStartPost=/usr/bin/vmware-user-suid-wrapper
+      Type=oneshot
+      RemainAfterExit=true
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+
+- name: Set permissions for VMware tools service file
+  file:
+    path: "/etc/systemd/system/vmware-tools.service"
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+  become: yes
+
+- name: Enable and start VMware tools service
+  systemd:
+    name: vmware-tools.service
+    enabled: yes
+    state: started
+  become: yes
+
+- name: Ensure .xprofile exists for user session start
+  copy:
+    dest: "/home/{{ ansible_user_id }}/.xprofile"
+    content: |
+      #!/bin/bash
+      /usr/bin/vmware-user-suid-wrapper &
+    mode: '0755'
+  become: yes
+
+- name: Set permissions for .xprofile
   file:
     path: "/home/{{ ansible_user_id }}/.xprofile"
-    state: touch
-    mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0755'
+  become: yes
 
-- name: Ensure VMware Tools commands are in ~/.xprofile
-  lineinfile:
-    path: "/home/{{ ansible_user_id }}/.xprofile"
-    line: "{{ item }}"
-    create: yes
-  loop:
-    - "/usr/local/sbin/restart-vm-tools"
-    - "/usr/local/sbin/mount-shared-folders"
+- name: Enable lingering for the user to start systemd user services at boot
+  command: "loginctl enable-linger {{ ansible_user_id }}"
+  become: yes
