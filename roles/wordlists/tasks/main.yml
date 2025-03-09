@@ -1,3 +1,12 @@
+- name: Ensure base wordlists directory exists
+  ansible.builtin.file:
+    path: /opt/wordlists
+    state: directory
+    owner: "{{ ansible_env.USER }}"
+    group: "{{ ansible_env.USER }}"
+    mode: '0755'
+  become: true  # Run as root to avoid permission issues
+
 - name: Include wordlist tasks
   ansible.builtin.include_tasks: "{{ item }}"
   loop:

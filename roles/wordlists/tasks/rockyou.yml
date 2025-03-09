@@ -1,13 +1,20 @@
 - name: Ensure wordlists directory exists
   ansible.builtin.file:
-    path: /opt/wordlists/
+    path: /opt/wordlists
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ ansible_env.USER }}"
+    group: "{{ ansible_env.USER }}"
     mode: '0755'
+  become: true  # Ensures directory is created with root privileges
 
-- name: Download RockYou wordlist
+- name: Check if RockYou wordlist exists
+  ansible.builtin.stat:
+    path: /opt/wordlists/rockyou.txt
+  register: rockyou_wordlist
+
+- name: Download RockYou wordlist if not already present
   ansible.builtin.get_url:
     url: "https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt"
     dest: /opt/wordlists/rockyou.txt
     mode: '0644'
+  when: not rockyou_wordlist.stat.exists
