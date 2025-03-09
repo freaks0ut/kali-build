@@ -1,0 +1,46 @@
+- name: Ensure /usr/local/sbin directory exists
+  ansible.builtin.file:
+    path: /usr/local/sbin
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+
+- name: Create `restart-vm-tools` script if it doesn't exist
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/restart-vm-tools
+    content: |
+      #!/bin/sh
+      test $(id -u) -eq 0 || { echo "Please call this script with sudo" >&2; exit 1; }
+      systemctl stop run-vmblock\\x2dfuse.mount
+      killall -q -w vmtoolsd
+      systemctl start run-vmblock\\x2dfuse.mount
+      systemctl enable run-vmblock\\x2dfuse.mount
+      vmware-user-suid-wrapper vmtoolsd -n vmusr 2>/dev/null
+      vmtoolsd -b /var/run/vmroot 2>/dev/null
+    owner: root
+    group: root
+    mode: '0755'
+    force: no
+  become: true
+
+- name: Create `mount-shared-folders` script if it doesn't exist
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/mount-shared-folders
+    content: |
+      #!/bin/sh
+      test $(id -u) -eq 0 || { echo "Please call this script with sudo" >&2; exit 1; }
+      vmware-hgfsclient | while read folder; do
+        vmwpath="/mnt/hgfs/${folder}"
+        echo "[i] Mounting ${folder}   (${vmwpath})"
+        mkdir -p "${vmwpath}"
+        umount -f "${vmwpath}" 2>/dev/null
+        vmhgfs-fuse -o allow_other -o auto_unmount ".host:/${folder}" "${vmwpath}"
+      done
+      sleep 2s
+    owner: root
+    group: root
+    mode: '0755'
+    force: no
+  become: true
