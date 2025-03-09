@@ -44,23 +44,15 @@
     state: started
   become: yes
 
+# ✅ FIX: Ensure .xprofile is written correctly
 - name: Ensure .xprofile exists for user session start
   copy:
     dest: "/home/{{ ansible_user_id }}/.xprofile"
     content: |
       #!/bin/bash
+      systemctl --user start vmware-tools.service
       /usr/bin/vmware-user-suid-wrapper &
     mode: '0755'
-  become: yes
-
-- name: Set permissions for .xprofile
-  file:
-    path: "/home/{{ ansible_user_id }}/.xprofile"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-    mode: '0755'
-  become: yes
-
-- name: Enable lingering for the user to start systemd user services at boot
-  command: "loginctl enable-linger {{ ansible_user_id }}"
   become: yes
