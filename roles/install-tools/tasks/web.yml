@@ -2,19 +2,45 @@
   ansible.builtin.file:
     path: /opt/tools/web
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ ansible_env.USER | default('root') }}"
+    group: "{{ ansible_env.USER | default('root') }}"
     mode: '0755'
+  become: true  # ✅ Ensures correct permissions
 
 - name: Install Burp Suite (Web Proxy)
   ansible.builtin.apt:
     name: burpsuite
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
 
 - name: Install SQLMap (SQL Injection Automation)
   ansible.builtin.apt:
     name: sqlmap
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
+
+- name: Ensure Go (Golang) is installed
+  ansible.builtin.apt:
+    name: golang
+    state: present
+    update_cache: yes
+  become: true  # ✅ Ensures installation runs as root
+
+- name: Ensure Go binary path is in the environment
+  ansible.builtin.lineinfile:
+    path: /etc/profile.d/golang.sh
+    line: 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin'
+    create: yes
+    mode: '0644'
+  become: true
+
+- name: Reload shell environment
+  ansible.builtin.shell: source /etc/profile.d/golang.sh
+  args:
+    executable: /bin/bash
+  changed_when: false
 
 - name: Install FFUF (Web Fuzzer)
   ansible.builtin.git:
@@ -22,14 +48,17 @@
     dest: /opt/tools/web/ffuf
     version: master
     force: yes
+  become: true
 
 - name: Build and install FFUF
   ansible.builtin.shell: |
+    export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
     cd /opt/tools/web/ffuf
     go get -u github.com/ffuf/ffuf
     go build -o ffuf
   args:
     executable: /bin/bash
+  become: true
 
 - name: Install Dirsearch (Directory Bruteforcing)
   ansible.builtin.git:
@@ -37,23 +66,32 @@
     dest: /opt/tools/web/dirsearch
     version: master
     force: yes
+  become: true  # ✅ Ensures correct installation permissions
 
 - name: Install XSSer (XSS Automation)
   ansible.builtin.apt:
     name: xsser
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
 
 - name: Install WPScan (WordPress Security Scanner)
   ansible.builtin.apt:
     name: wpscan
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
 
 - name: Install Nikto (Web Vulnerability Scanner)
   ansible.builtin.apt:
     name: nikto
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
 
 - name: Install WhatWeb (Web Fingerprinting)
   ansible.builtin.apt:
     name: whatweb
     state: present
+    update_cache: yes
+  become: true  # ✅ Runs with sudo
