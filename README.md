@@ -25,7 +25,7 @@ su username
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/kali-build.git
+git clone https://github.com/freaks0ut/kali-build.git
 cd kali-build
 ```
 
@@ -42,7 +42,7 @@ reboot
 ```
 
 ## What This Playbook Does
-- **Installs** `i3-gaps`, `Alacritty`, `Compton (Picom)`, `Rofi`, and all necessary dependencies.
+- **Installs** `i3-gaps`, `Alacritty`, `Compton`, `Rofi`, and all necessary dependencies.
 - **Configures** `i3`, `Alacritty`, `Picom`, and `Rofi`.
 - **Installs and sets up** `Oh-My-Zsh` with plugins.
 - **Applies** `Arc-Theme` and `Papirus-Dark` icon theme persistently.
