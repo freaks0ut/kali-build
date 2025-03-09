@@ -1,0 +1,14 @@
+- name: Ensure ~/.xprofile exists
+  file:
+    path: "/home/{{ ansible_user_id }}/.xprofile"
+    state: touch
+    mode: '0644'
+
+- name: Ensure VMware Tools commands are in ~/.xprofile
+  lineinfile:
+    path: "/home/{{ ansible_user_id }}/.xprofile"
+    line: "{{ item }}"
+    create: yes
+  loop:
+    - "/usr/local/sbin/restart-vm-tools"
+    - "/usr/local/sbin/mount-shared-folders"
