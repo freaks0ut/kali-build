@@ -29,7 +29,7 @@
     dest: "{{ config_dirs[1] }}/alacritty.toml"
     mode: '0644'
 
-- name: Deploy Compton (Picom) configuration
+- name: Deploy Compton configuration
   copy:
     src: "files/compton/compton.conf"
     dest: "{{ config_dirs[2] }}/compton.conf"
@@ -70,4 +70,6 @@
     group: "{{ ansible_user_id }}"
     mode: '0644'
   loop: "{{ config_files_status.results }}"
-  when: item.stat.exists | default(false) == true
+  when: item.stat.exists
+  no_log: true
+

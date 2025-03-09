@@ -122,7 +122,7 @@ bar {
     i3bar_command i3bar -t
     position top
     height 50  # Adjusted to fit the font size 14
-    font pango:RobotoMono Nerd Font Regular 6
+    font pango:RobotoMono Nerd Font Regular 14
     colors {
         statusline #EEEEEE
         background #1C1D2B88
@@ -146,7 +146,8 @@ default_border normal
 exec_always --no-startup-id sh ~/.fehbg
 
 # compton - Compositing Manager for Shadows and Opacity
-exec_always --no-startup-id picom --config ~/.config/compton/compton.conf -b
+# Start Compton for transparency
+exec_always --no-startup-id compton --config ~/.config/compton/compton.conf -b
 
 # VM Clipboard Fix
 exec_always --no-startup-id ~/.config/i3/clipboard_fix.sh

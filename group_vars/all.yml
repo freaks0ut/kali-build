@@ -3,7 +3,7 @@ i3_packages:
   - i3blocks
   - rofi
   - feh
-  - picom
+  - compton
   - xclip
   - lxappearance
   - alacritty

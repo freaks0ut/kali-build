@@ -8,33 +8,33 @@
   failed_when: false
 
 - name: Restart i3 if running
-  command: i3-msg restart
+  command: "i3-msg restart"
   when: i3_status.rc == 0
   environment:
     DISPLAY: "{{ lookup('env', 'DISPLAY') | default(':0', true) }}"
   ignore_errors: yes
 
-- name: Kill existing Picom process (if running)
-  shell: "pgrep -x picom && pkill -x picom || true"
+### 🛠 Kill Other Compositors Before Starting Compton ###
+- name: Kill existing Compton process (if running)
+  shell: "pgrep -x compton && pkill -9 compton || true"
+  ignore_errors: yes
+
+- name: Kill default Kali compositor (if running)
+  shell: "pgrep -x mutter && pkill -9 mutter || pgrep -x xfwm4 && pkill -9 xfwm4 || true"
   ignore_errors: yes
 
 - name: Ensure no other compositor is running
-  shell: "pgrep -x mutter || pgrep -x xfwm4"
-  register: other_compositor
+  shell: "pgrep -x compton || pgrep -x picom || true"
+  register: compositor_status
   changed_when: false
-  failed_when: false
 
-- name: Kill other compositor if running
-  shell: "pkill -x mutter || pkill -x xfwm4"
-  when: other_compositor.rc == 0
+- name: Start Compton compositor (if not running)
+  shell: "[[ {{ compositor_status.rc }} -ne 0 ]] && compton --config ~/.config/compton/compton.conf -b || true"
+  environment:
+    DISPLAY: ":0"
   ignore_errors: yes
 
-- name: Start Picom compositor (if not running)
-  shell: "pgrep -x picom || picom --config ~/.config/compton/compton.conf -b"
-  when: other_compositor.rc != 0
-  environment:
-    DISPLAY: "{{ lookup('env', 'DISPLAY') | default(':0', true) }}"
-
+### 🖥 Ensure i3 Starts by Default ###
 - name: Ensure i3 is the default session
   copy:
     content: "exec i3"
@@ -45,7 +45,28 @@
 
 - name: Set i3 as default in LightDM
   copy:
-    dest: "/etc/X11/default-display-manager"
-    content: "/usr/bin/i3"
-  become: true
+    dest: "/usr/share/xsessions/i3.desktop"
+    content: |
+      [Desktop Entry]
+      Name=i3
+      Comment=Dynamic tiling window manager
+      Exec=/usr/bin/i3
+      TryExec=/usr/bin/i3
+      Type=Application
+      X-LightDM-DesktopName=i3
+  become: yes
   ignore_errors: yes
+
+- name: Set i3 as the default desktop environment
+  command: "update-alternatives --set x-session-manager /usr/bin/i3"
+  become: yes
+  ignore_errors: yes
+
+- name: Set X11 as the default display server
+  command: "echo 'exec startx' > ~/.xinitrc"
+
+### 🔧 Fix Potential Compton Config Issues ###
+- name: Check if Compton config exists
+  stat:
+    path: "~/.config/compton/compton.conf"
+  register: compton_conf
