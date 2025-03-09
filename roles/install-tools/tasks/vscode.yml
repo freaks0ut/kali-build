@@ -7,38 +7,39 @@
     mode: '0755'
   become: true
 
+# ✅ Check if VSCode is installed (No errors if missing)
 - name: Check if VSCode is installed
-  ansible.builtin.command: dpkg-query -W -f='${Version}' code
-  register: vscode_installed_version
-  ignore_errors: true
+  ansible.builtin.command: which code
+  register: vscode_path
+  failed_when: false
   changed_when: false
 
-- name: Get latest VSCode version from GitHub releases
-  ansible.builtin.uri:
-    url: "https://api.github.com/repos/microsoft/vscode/releases/latest"
-    return_content: yes
-  register: vscode_latest_release
-  when: vscode_installed_version.stdout | default('none') == 'none'
-
-- name: Extract latest version from GitHub API
-  ansible.builtin.set_fact:
-    vscode_latest: "{{ vscode_latest_release.json.tag_name | regex_replace('^v', '') }}"
-  when: vscode_installed_version.stdout | default('none') == 'none'
-
+# ✅ Download and install VSCode only if missing
 - name: Download latest VSCode for ARM64 if not installed
   ansible.builtin.get_url:
     url: "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64"
     dest: /opt/apps/vscode-arm64.deb
     mode: '0644'
-  when: vscode_installed_version.stdout | default('none') == 'none'
+  when: vscode_path.rc != 0
   become: true
 
 - name: Install VSCode for ARM64
   ansible.builtin.apt:
     deb: /opt/apps/vscode-arm64.deb
-  when: vscode_installed_version.stdout | default('none') == 'none'
+  when: vscode_path.rc != 0
   become: true
 
+# ✅ Ensure VSCode is in PATH
+- name: Add VSCode to PATH if missing
+  ansible.builtin.lineinfile:
+    path: /etc/profile.d/vscode.sh
+    line: 'export PATH=$PATH:/usr/bin'
+    create: yes
+    mode: '0644'
+  when: vscode_path.rc != 0
+  become: true
+
+# ✅ Ensure VSCode extensions directory exists
 - name: Ensure VSCode extensions directory exists
   ansible.builtin.file:
     path: "/home/{{ ansible_env.USER }}/.vscode/extensions"
@@ -47,9 +48,10 @@
     group: "{{ ansible_env.USER | default('root') }}"
     mode: '0755'
 
+# ✅ Install VSCode extensions only if VSCode is installed
 - name: Install recommended VSCode extensions (including Java Decompiler)
-  ansible.builtin.command: >
-    code --install-extension {{ item }} --force
+  ansible.builtin.command:
+    cmd: "code --install-extension {{ extension }} --force"
   loop:
     - ms-python.python
     - ms-vscode.cpptools
@@ -58,6 +60,9 @@
     - ms-azuretools.vscode-docker
     - ms-vscode-remote.remote-ssh
     - eamodio.gitlens
-    - dgileadi.java-decompiler  # ✅ Java Decompiler for .jar files
+    - dgileadi.java-decompiler
+  loop_control:
+    loop_var: extension
   changed_when: false
   become_user: "{{ ansible_env.USER | default('root') }}"
+  when: vscode_path.rc == 0  # ✅ Install extensions only when VSCode is present
