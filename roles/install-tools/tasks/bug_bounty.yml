@@ -1,0 +1,77 @@
+- name: Ensure Bug Bounty tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/bug_bounty
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Nuclei (Template-based Scanning)
+  ansible.builtin.git:
+    repo: 'https://github.com/projectdiscovery/nuclei.git'
+    dest: /opt/tools/bug_bounty/nuclei
+    version: main
+    force: yes
+
+- name: Build and install Nuclei
+  ansible.builtin.shell: |
+    cd /opt/tools/bug_bounty/nuclei
+    go build -o nuclei
+  args:
+    executable: /bin/bash
+
+- name: Install Httpx (HTTP Probing)
+  ansible.builtin.git:
+    repo: 'https://github.com/projectdiscovery/httpx.git'
+    dest: /opt/tools/bug_bounty/httpx
+    version: main
+    force: yes
+
+- name: Build and install Httpx
+  ansible.builtin.shell: |
+    cd /opt/tools/bug_bounty/httpx
+    go build -o httpx
+  args:
+    executable: /bin/bash
+
+- name: Install Katana (Web Crawler)
+  ansible.builtin.git:
+    repo: 'https://github.com/projectdiscovery/katana.git'
+    dest: /opt/tools/bug_bounty/katana
+    version: main
+    force: yes
+
+- name: Build and install Katana
+  ansible.builtin.shell: |
+    cd /opt/tools/bug_bounty/katana
+    go build -o katana
+  args:
+    executable: /bin/bash
+
+- name: Install ParamSpider (Parameter Discovery)
+  ansible.builtin.git:
+    repo: 'https://github.com/devanshbatham/paramspider.git'
+    dest: /opt/tools/bug_bounty/paramspider
+    version: master
+    force: yes
+
+- name: Install ParamSpider dependencies
+  ansible.builtin.pip:
+    name:
+      - requests
+      - beautifulsoup4
+      - tldextract
+
+- name: Install Dalfox (XSS Scanner)
+  ansible.builtin.git:
+    repo: 'https://github.com/hahwul/dalfox.git'
+    dest: /opt/tools/bug_bounty/dalfox
+    version: main
+    force: yes
+
+- name: Build and install Dalfox
+  ansible.builtin.shell: |
+    cd /opt/tools/bug_bounty/dalfox
+    go build -o dalfox
+  args:
+    executable: /bin/bash

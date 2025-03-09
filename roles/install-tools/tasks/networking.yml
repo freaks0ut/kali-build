@@ -1,0 +1,44 @@
+- name: Ensure Networking tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/networking
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Wireshark (Network Packet Analysis)
+  ansible.builtin.apt:
+    name: wireshark
+    state: present
+
+- name: Install Responder (LLMNR/NBT-NS Poisoning)
+  ansible.builtin.git:
+    repo: 'https://github.com/lgandx/Responder.git'
+    dest: /opt/tools/networking/Responder
+    version: master
+    force: yes
+
+- name: Install Bettercap (MITM Framework)
+  ansible.builtin.apt:
+    name: bettercap
+    state: present
+
+- name: Install MITMf (Man-in-the-Middle Framework)
+  ansible.builtin.git:
+    repo: 'https://github.com/byt3bl33d3r/MITMf.git'
+    dest: /opt/tools/networking/MITMf
+    version: master
+    force: yes
+
+- name: Install MITMf dependencies
+  ansible.builtin.pip:
+    name:
+      - virtualenv
+      - scapy
+      - netfilterqueue
+      - dnslib
+
+- name: Install TCPDump (Packet Capture)
+  ansible.builtin.apt:
+    name: tcpdump
+    state: present

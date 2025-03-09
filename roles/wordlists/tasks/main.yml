@@ -1,0 +1,6 @@
+- name: Include wordlist tasks
+  ansible.builtin.include_tasks: "{{ item }}"
+  loop:
+    - seclists.yml
+    - rockyou.yml
+    - fuzzing.yml

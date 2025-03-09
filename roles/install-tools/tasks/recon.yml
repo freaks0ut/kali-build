@@ -1,0 +1,74 @@
+- name: Ensure Recon tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/recon
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Amass (Subdomain Enumeration)
+  ansible.builtin.apt:
+    name: amass
+    state: present
+
+- name: Install Sublist3r (Subdomain Enumeration)
+  ansible.builtin.git:
+    repo: 'https://github.com/aboul3la/Sublist3r.git'
+    dest: /opt/tools/recon/Sublist3r
+    version: master
+    force: yes
+
+- name: Install Sublist3r dependencies
+  ansible.builtin.pip:
+    name:
+      - requests
+      - dnspython
+      - argparse
+      - colorama
+
+- name: Install Hakrawler (URL Crawling)
+  ansible.builtin.git:
+    repo: 'https://github.com/hakluke/hakrawler.git'
+    dest: /opt/tools/recon/hakrawler
+    version: master
+    force: yes
+
+- name: Build and install Hakrawler
+  ansible.builtin.shell: |
+    cd /opt/tools/recon/hakrawler
+    go build -o hakrawler
+  args:
+    executable: /bin/bash
+
+- name: Install MassDNS (High-performance DNS Resolver)
+  ansible.builtin.git:
+    repo: 'https://github.com/blechschmidt/massdns.git'
+    dest: /opt/tools/recon/massdns
+    version: master
+    force: yes
+
+- name: Build and install MassDNS
+  ansible.builtin.shell: |
+    cd /opt/tools/recon/massdns
+    make
+  args:
+    executable: /bin/bash
+
+- name: Install Assetfinder (Asset Discovery)
+  ansible.builtin.git:
+    repo: 'https://github.com/tomnomnom/assetfinder.git'
+    dest: /opt/tools/recon/assetfinder
+    version: master
+    force: yes
+
+- name: Build and install Assetfinder
+  ansible.builtin.shell: |
+    cd /opt/tools/recon/assetfinder
+    go build -o assetfinder
+  args:
+    executable: /bin/bash
+
+- name: Install Shodan CLI (Shodan API Client)
+  ansible.builtin.apt:
+    name: python3-shodan
+    state: present

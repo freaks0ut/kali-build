@@ -1,0 +1,55 @@
+- name: Ensure Shells tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/shells
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Chisel (TCP/UDP Tunneling)
+  ansible.builtin.git:
+    repo: 'https://github.com/jpillora/chisel.git'
+    dest: /opt/tools/shells/chisel
+    version: master
+    force: yes
+
+- name: Build and install Chisel
+  ansible.builtin.shell: |
+    cd /opt/tools/shells/chisel
+    go build -o chisel
+  args:
+    executable: /bin/bash
+
+- name: Install Ligolo (Reverse Tunneling)
+  ansible.builtin.git:
+    repo: 'https://github.com/nicocha30/ligolo-ng.git'
+    dest: /opt/tools/shells/ligolo
+    version: main
+    force: yes
+
+- name: Build Ligolo
+  ansible.builtin.shell: |
+    cd /opt/tools/shells/ligolo
+    go build -o agent ./agent
+    go build -o proxy ./proxy
+  args:
+    executable: /bin/bash
+
+- name: Install Nishang (PowerShell Scripts)
+  ansible.builtin.git:
+    repo: 'https://github.com/samratashok/nishang.git'
+    dest: /opt/tools/shells/nishang
+    version: master
+    force: yes
+
+- name: Install PoshC2 (Post-Exploitation Framework)
+  ansible.builtin.git:
+    repo: 'https://github.com/nettitude/PoshC2.git'
+    dest: /opt/tools/shells/PoshC2
+    version: master
+    force: yes
+
+- name: Install Socat (Port Forwarding)
+  ansible.builtin.apt:
+    name: socat
+    state: present

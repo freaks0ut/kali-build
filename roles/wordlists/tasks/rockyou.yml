@@ -1,0 +1,13 @@
+- name: Ensure wordlists directory exists
+  ansible.builtin.file:
+    path: /opt/wordlists/
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Download RockYou wordlist
+  ansible.builtin.get_url:
+    url: "https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt"
+    dest: /opt/wordlists/rockyou.txt
+    mode: '0644'

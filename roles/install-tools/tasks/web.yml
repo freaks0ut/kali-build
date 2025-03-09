@@ -1,0 +1,59 @@
+- name: Ensure Web tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/web
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Burp Suite (Web Proxy)
+  ansible.builtin.apt:
+    name: burpsuite
+    state: present
+
+- name: Install SQLMap (SQL Injection Automation)
+  ansible.builtin.apt:
+    name: sqlmap
+    state: present
+
+- name: Install FFUF (Web Fuzzer)
+  ansible.builtin.git:
+    repo: 'https://github.com/ffuf/ffuf.git'
+    dest: /opt/tools/web/ffuf
+    version: master
+    force: yes
+
+- name: Build and install FFUF
+  ansible.builtin.shell: |
+    cd /opt/tools/web/ffuf
+    go get -u github.com/ffuf/ffuf
+    go build -o ffuf
+  args:
+    executable: /bin/bash
+
+- name: Install Dirsearch (Directory Bruteforcing)
+  ansible.builtin.git:
+    repo: 'https://github.com/maurosoria/dirsearch.git'
+    dest: /opt/tools/web/dirsearch
+    version: master
+    force: yes
+
+- name: Install XSSer (XSS Automation)
+  ansible.builtin.apt:
+    name: xsser
+    state: present
+
+- name: Install WPScan (WordPress Security Scanner)
+  ansible.builtin.apt:
+    name: wpscan
+    state: present
+
+- name: Install Nikto (Web Vulnerability Scanner)
+  ansible.builtin.apt:
+    name: nikto
+    state: present
+
+- name: Install WhatWeb (Web Fingerprinting)
+  ansible.builtin.apt:
+    name: whatweb
+    state: present

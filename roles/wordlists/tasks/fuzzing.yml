@@ -1,0 +1,20 @@
+- name: Ensure fuzzing wordlists directory exists
+  ansible.builtin.file:
+    path: /opt/wordlists/fuzzing
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Download Fuzzing Wordlists
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/Bo0oM/fuzz.txt/master/fuzz.txt"
+    dest: /opt/wordlists/fuzzing/fuzz.txt
+    mode: '0644'
+
+- name: Download raft wordlists
+  ansible.builtin.git:
+    repo: 'https://github.com/danielmiessler/RobotsDisallowed.git'
+    dest: /opt/wordlists/fuzzing/robots_disallowed
+    version: master
+    force: yes

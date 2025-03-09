@@ -1,0 +1,60 @@
+- name: Ensure Blue Team tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/blue_team
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Zeek (Network Monitoring)
+  ansible.builtin.apt:
+    name: zeek
+    state: present
+
+- name: Install Suricata (IDS/IPS)
+  ansible.builtin.apt:
+    name: suricata
+    state: present
+
+- name: Install Sysmon for Linux
+  ansible.builtin.git:
+    repo: 'https://github.com/Sysinternals/SysmonForLinux.git'
+    dest: /opt/tools/blue_team/SysmonForLinux
+    version: main
+    force: yes
+
+- name: Build and install Sysmon for Linux
+  ansible.builtin.shell: |
+    cd /opt/tools/blue_team/SysmonForLinux
+    make
+    sudo make install
+  args:
+    executable: /bin/bash
+
+- name: Install Velociraptor
+  ansible.builtin.get_url:
+    url: "https://github.com/Velocidex/velociraptor/releases/latest/download/velociraptor-linux-amd64"
+    dest: /opt/tools/blue_team/velociraptor
+    mode: '0755'
+
+- name: Install Loki (Malware Scanner)
+  ansible.builtin.git:
+    repo: 'https://github.com/Neo23x0/Loki.git'
+    dest: /opt/tools/blue_team/Loki
+    version: master
+    force: yes
+
+- name: Install Loki dependencies
+  ansible.builtin.pip:
+    name:
+      - yara-python
+      - colorama
+      - psutil
+      - pefile
+
+- name: Create a symbolic link for Loki scanner
+  ansible.builtin.file:
+    src: /opt/tools/blue_team/Loki/loki.py
+    dest: /usr/local/bin/loki
+    state: link
+    mode: '0755'

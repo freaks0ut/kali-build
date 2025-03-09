@@ -1,0 +1,54 @@
+- name: Ensure Privilege Escalation tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/privilege_escalation
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install LinPEAS (Linux Privilege Escalation)
+  ansible.builtin.git:
+    repo: 'https://github.com/carlospolop/PEASS-ng.git'
+    dest: /opt/tools/privilege_escalation/PEASS-ng
+    version: master
+    force: yes
+
+- name: Create a symlink for LinPEAS
+  ansible.builtin.file:
+    src: /opt/tools/privilege_escalation/PEASS-ng/linPEAS/linpeas.sh
+    dest: /usr/local/bin/linpeas
+    state: link
+    mode: '0755'
+
+- name: Install WinPEAS (Windows Privilege Escalation)
+  ansible.builtin.get_url:
+    url: "https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEASx64.exe"
+    dest: /opt/tools/privilege_escalation/winPEAS.exe
+    mode: '0755'
+
+- name: Install BeRoot (Linux & Windows Privilege Escalation)
+  ansible.builtin.git:
+    repo: 'https://github.com/AlessandroZ/BeRoot.git'
+    dest: /opt/tools/privilege_escalation/BeRoot
+    version: master
+    force: yes
+
+- name: Install GTFOBins (Linux Binaries Privilege Escalation)
+  ansible.builtin.git:
+    repo: 'https://github.com/GTFOBins/GTFOBins.github.io.git'
+    dest: /opt/tools/privilege_escalation/GTFOBins
+    version: master
+    force: yes
+
+- name: Install Linux Exploit Suggester (Kernel Exploits)
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/mzet-/linux-exploit-suggester/master/linux-exploit-suggester.sh"
+    dest: /opt/tools/privilege_escalation/linux-exploit-suggester.sh
+    mode: '0755'
+
+- name: Install Windows Exploit Suggester (Windows Kernel Exploits)
+  ansible.builtin.git:
+    repo: 'https://github.com/bitsadmin/wesng.git'
+    dest: /opt/tools/privilege_escalation/wesng
+    version: master
+    force: yes
