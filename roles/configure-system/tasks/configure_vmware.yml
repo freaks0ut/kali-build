@@ -44,7 +44,15 @@
     state: started
   become: yes
 
-# ✅ FIX: Ensure .xprofile is written correctly
+- name: Ensure .xprofile exists in the user directory
+  file:
+    path: "/home/{{ ansible_user_id }}/.xprofile"
+    state: touch
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  become: yes
+
 - name: Ensure .xprofile exists for user session start
   copy:
     dest: "/home/{{ ansible_user_id }}/.xprofile"
