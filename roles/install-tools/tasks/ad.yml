@@ -33,27 +33,6 @@
     /usr/bin/python3 setup.py install
   become: true
 
-- name: Install Certipy
-  ansible.builtin.git:
-    repo: 'https://github.com/ly4k/Certipy.git'
-    dest: /opt/tools/ad/Certipy
-    version: main
-    force: yes
-  become: true
-
-- name: Create a virtual environment for Certipy
-  ansible.builtin.command:
-    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/certipy-venv"
-  args:
-    creates: /opt/tools/ad/certipy-venv
-  become: true
-
-- name: Install Certipy dependencies in the virtual environment
-  ansible.builtin.shell: |
-    /opt/tools/ad/certipy-venv/bin/pip install --upgrade pip
-    /opt/tools/ad/certipy-venv/bin/pip install cryptography requests ldap3 impacket
-  become: true
-
 - name: Ensure Impacket scripts are executable
   ansible.builtin.file:
     path: "/opt/tools/ad/impacket/examples/{{ item }}"
@@ -79,6 +58,33 @@
     mode: '0755'
   become: true
 
+
+- name: Ensure Certipy virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/certipy-venv"
+  args:
+    creates: /opt/tools/ad/certipy-venv
+  become: true
+
+- name: Install Certipy in the virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/certipy-venv/bin/activate
+    pip install --upgrade pip
+    pip install certipy-ad
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Ensure Certipy is globally accessible
+  ansible.builtin.file:
+    src: /opt/tools/ad/certipy-venv/bin/certipy
+    dest: /usr/local/bin/certipy
+    state: link
+    mode: '0755'
+  become: true
+
+
+
 - name: Download Rubeus release zip
   ansible.builtin.get_url:
     url: "https://github.com/GhostPack/Rubeus/archive/refs/tags/1.6.4.zip"
@@ -103,5 +109,44 @@
   ansible.builtin.get_url:
     url: "https://github.com/BloodHoundAD/BloodHound/blob/master/Collectors/SharpHound.exe?raw=true"
     dest: /opt/tools/ad/SharpHound.exe
+    mode: '0755'
+  become: true
+
+
+# -----------------------------
+# ✅ BloodyAD Installation
+# -----------------------------
+
+- name: Ensure BloodyAD virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/bloodyad-venv"
+  args:
+    creates: /opt/tools/ad/bloodyad-venv
+  become: true
+
+- name: Install required system packages for BloodyAD
+  ansible.builtin.apt:
+    name:
+      - gcc
+      - python3-dev
+      - libkrb5-dev
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install BloodyAD in the virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/bloodyad-venv/bin/activate
+    pip install --upgrade pip
+    pip install bloodyAD
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Ensure BloodyAD is globally accessible
+  ansible.builtin.file:
+    src: /opt/tools/ad/bloodyad-venv/bin/bloodyAD
+    dest: /usr/local/bin/bloodyAD
+    state: link
     mode: '0755'
   become: true
