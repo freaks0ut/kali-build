@@ -150,3 +150,83 @@
     state: link
     mode: '0755'
   become: true
+
+
+# -----------------------------
+# ✅ NXC (NetExec) Installation
+# -----------------------------
+
+- name: Ensure NXC virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/nxc-venv"
+  args:
+    creates: /opt/tools/ad/nxc-venv
+  become: true
+
+- name: Install required system packages for NXC
+  ansible.builtin.apt:
+    name:
+      - python3-dev
+      - python3-pip
+      - gcc
+      - libkrb5-dev
+      - libssl-dev
+      - libffi-dev
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Clone NetExec (NXC) repository
+  ansible.builtin.git:
+    repo: "https://github.com/Pennyw0rth/NetExec.git"
+    dest: /opt/tools/ad/nxc
+    version: main
+    force: yes
+  become: true
+
+- name: Install NXC dependencies manually in the virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/nxc-venv/bin/activate
+    pip install --upgrade pip
+    pip install setuptools wheel
+    pip install pyasn1 pycryptodome ldap3 impacket
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Ensure NXC is globally accessible
+  ansible.builtin.file:
+    src: /opt/tools/ad/nxc-venv/bin/python
+    dest: /usr/local/bin/nxc
+    state: link
+    mode: '0755'
+  become: true
+
+
+# -----------------------------
+# ✅ PyWhisker Installation
+# -----------------------------
+
+- name: Ensure PyWhisker virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/pywhisker-venv"
+  args:
+    creates: /opt/tools/ad/pywhisker-venv
+  become: true
+
+- name: Install PyWhisker in the virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/pywhisker-venv/bin/activate
+    pip install --upgrade pip
+    pip install pywhisker
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Ensure PyWhisker is globally accessible
+  ansible.builtin.file:
+    src: /opt/tools/ad/pywhisker-venv/bin/pywhisker
+    dest: /usr/local/bin/pywhisker
+    state: link
+    mode: '0755'
+  become: true

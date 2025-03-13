@@ -23,13 +23,6 @@
   register: docker_remove
   become: true
 
-- name: "Remove NetExec - We want to use pipx for this"
-  package:
-    name:
-      - netexec
-    state: absent
-  become: true
-
 - name: "Remove Containerd/Runc"
   package:
     name:
