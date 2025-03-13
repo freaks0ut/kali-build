@@ -16,7 +16,7 @@
     - web.yml
     - dirsearch.yml
     - git-dumper.yml
-    #- ad.yml
+    - ad.yml
     - bloodhound.yml
     #- shells.yml
     #- privilege_escalation.yml

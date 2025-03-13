@@ -2,9 +2,21 @@
   ansible.builtin.file:
     path: /opt/tools/ad
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
     mode: '0755'
+  become: true
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - python3
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: yes
+  become: true
 
 - name: Install Impacket
   ansible.builtin.git:
@@ -12,27 +24,44 @@
     dest: /opt/tools/ad/impacket
     version: master
     force: yes
+  become: true
 
 - name: Install Impacket dependencies
   ansible.builtin.shell: |
     cd /opt/tools/ad/impacket
-    python3 -m pip install -r requirements.txt
-    python3 setup.py install
+    /usr/bin/python3 -m pip install -r requirements.txt --break-system-packages
+    /usr/bin/python3 setup.py install
+  become: true
 
 - name: Install Certipy
   ansible.builtin.git:
     repo: 'https://github.com/ly4k/Certipy.git'
     dest: /opt/tools/ad/Certipy
-    version: master
+    version: main
     force: yes
+  become: true
 
-- name: Install Certipy dependencies
-  ansible.builtin.pip:
-    name:
-      - cryptography
-      - requests
-      - ldap3
-      - impacket
+- name: Create a virtual environment for Certipy
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/certipy-venv"
+  args:
+    creates: /opt/tools/ad/certipy-venv
+  become: true
+
+- name: Install Certipy dependencies in the virtual environment
+  ansible.builtin.shell: |
+    /opt/tools/ad/certipy-venv/bin/pip install --upgrade pip
+    /opt/tools/ad/certipy-venv/bin/pip install cryptography requests ldap3 impacket
+  become: true
+
+- name: Ensure Impacket scripts are executable
+  ansible.builtin.file:
+    path: "/opt/tools/ad/impacket/examples/{{ item }}"
+    mode: '0755'
+  loop:
+    - ntlmrelayx.py
+    - secretsdump.py
+  become: true
 
 - name: Install ntlmrelayx from Impacket
   ansible.builtin.file:
@@ -40,6 +69,7 @@
     dest: /usr/local/bin/ntlmrelayx
     state: link
     mode: '0755'
+  become: true
 
 - name: Install secretsdump from Impacket
   ansible.builtin.file:
@@ -47,15 +77,31 @@
     dest: /usr/local/bin/secretsdump
     state: link
     mode: '0755'
+  become: true
 
-- name: Install Rubeus
+- name: Download Rubeus release zip
   ansible.builtin.get_url:
-    url: "https://github.com/GhostPack/Rubeus/releases/latest/download/Rubeus.exe"
-    dest: /opt/tools/ad/Rubeus.exe
-    mode: '0755'
+    url: "https://github.com/GhostPack/Rubeus/archive/refs/tags/1.6.4.zip"
+    dest: "/opt/tools/ad/Rubeus-1.6.4.zip"
+    mode: '0644'
+  become: true
+
+- name: Install unzip if not installed
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: true
+
+- name: Extract Rubeus.exe from the zip
+  ansible.builtin.unarchive:
+    src: "/opt/tools/ad/Rubeus-1.6.4.zip"
+    dest: "/opt/tools/ad/"
+    remote_src: yes
+  become: true
 
 - name: Install SharpHound
   ansible.builtin.get_url:
     url: "https://github.com/BloodHoundAD/BloodHound/blob/master/Collectors/SharpHound.exe?raw=true"
     dest: /opt/tools/ad/SharpHound.exe
     mode: '0755'
+  become: true
