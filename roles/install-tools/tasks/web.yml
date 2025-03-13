@@ -60,14 +60,6 @@
     executable: /bin/bash
   become: true
 
-- name: Install Dirsearch (Directory Bruteforcing)
-  ansible.builtin.git:
-    repo: 'https://github.com/maurosoria/dirsearch.git'
-    dest: /opt/tools/web/dirsearch
-    version: master
-    force: yes
-  become: true  # ✅ Ensures correct installation permissions
-
 - name: Install XSSer (XSS Automation)
   ansible.builtin.apt:
     name: xsser

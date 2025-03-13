@@ -1,0 +1,52 @@
+- name: Ensure the installation directory exists
+  ansible.builtin.file:
+    path: /opt/tools/web/dirsearch
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0755'
+  become: true
+
+- name: Add /opt/tools/web/dirsearch to Git safe directories
+  ansible.builtin.command:
+    cmd: git config --global --add safe.directory /opt/tools/web/dirsearch
+  changed_when: false
+
+- name: Clone Dirsearch repository
+  ansible.builtin.git:
+    repo: 'https://github.com/maurosoria/dirsearch.git'
+    dest: /opt/tools/web/dirsearch
+    version: master
+    force: yes
+  become: true
+
+- name: Ensure Python3 venv is installed (system package)
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+  become: true
+
+- name: Create a Python virtual environment for Dirsearch
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/tools/web/dirsearch/venv
+    creates: /opt/tools/web/dirsearch/venv
+  become: true
+
+- name: Upgrade pip inside virtual environment
+  ansible.builtin.command:
+    cmd: /opt/tools/web/dirsearch/venv/bin/pip install --upgrade pip
+  become: true
+
+- name: Install Dirsearch dependencies inside virtual environment
+  ansible.builtin.command:
+    cmd: /opt/tools/web/dirsearch/venv/bin/pip install -r /opt/tools/web/dirsearch/requirements.txt
+  become: true
+
+- name: Create an executable wrapper for Dirsearch
+  ansible.builtin.copy:
+    dest: /usr/local/bin/dirsearch
+    content: |
+      #!/bin/bash
+      /opt/tools/web/dirsearch/venv/bin/python /opt/tools/web/dirsearch/dirsearch.py "$@"
+    mode: '0755'
+  become: true
