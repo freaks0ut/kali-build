@@ -6,29 +6,6 @@
     group: "{{ ansible_user }}"
     mode: '0755'
 
-- name: Install BloodHound
-  ansible.builtin.apt:
-    name: bloodhound
-    state: present
-
-- name: Install CrackMapExec
-  ansible.builtin.git:
-    repo: 'https://github.com/Porchetta-Industries/CrackMapExec.git'
-    dest: /opt/tools/ad/CrackMapExec
-    version: master
-    force: yes
-
-- name: Install CrackMapExec dependencies
-  ansible.builtin.pip:
-    name:
-      - impacket
-      - flask
-      - pylnk3
-      - setuptools
-      - wheel
-      - cffi
-      - python-dev
-
 - name: Install Impacket
   ansible.builtin.git:
     repo: 'https://github.com/fortra/impacket.git'

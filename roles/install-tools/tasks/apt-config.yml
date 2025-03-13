@@ -1,0 +1,106 @@
+---
+- name: "Updating apt repo/cache"
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+  become: true
+
+- name: "Upgrade all packages"
+  apt:
+    upgrade: yes
+    force_apt_get: yes
+  become: true
+
+- name: "Remove unofficial Docker images"
+  package:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-doc
+      - podman-docker
+    state: absent
+  register: docker_remove
+  become: true
+
+- name: "Remove NetExec - We want to use pipx for this"
+  package:
+    name:
+      - netexec
+    state: absent
+  become: true
+
+- name: "Remove Containerd/Runc"
+  package:
+    name:
+      - containerd
+      - runc
+    state: absent
+  when: docker_remove.changed
+  become: true
+
+- name: "Installing Required Packages"
+  package:
+    name:
+      - jq
+      - pipx
+      - ntpdate
+      - flameshot
+      - exiftool
+      - rsyslog
+      - ca-certificates
+      - curl
+      - gnupg
+      - gh
+    state: latest
+  become: true
+
+- name: "Ensure /etc/apt/keyrings directory exists"
+  file:
+    path: "/etc/apt/keyrings"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: "Add Docker keyring to apt"
+  get_url:
+    url: "https://download.docker.com/linux/debian/gpg"
+    dest: "/etc/apt/keyrings/docker.asc"
+    mode: '0644'
+  become: true
+
+- name: "Detect system architecture"
+  command: "dpkg --print-architecture"
+  register: system_arch
+  changed_when: false
+
+- name: "Install Docker Repository (for ARM64 compatibility)"
+  apt_repository:
+    repo: "deb [arch={{ system_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable"
+    state: present
+    update_cache: yes
+  become: true
+
+- name: "Upgrade all packages"
+  apt:
+    upgrade: yes
+    force_apt_get: yes
+  become: true
+
+- name: "Install Docker and Dependencies"
+  package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+  become: true
+
+- name: "Ensure Docker service is enabled and running"
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: true

@@ -1,0 +1,54 @@
+---
+- name: Create required directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "/opt/bloodhound"
+    - "/opt/bloodhound/server"
+  become: true
+
+- name: Download BloodHound docker-compose file
+  get_url:
+    url: "https://ghst.ly/getbhce"
+    dest: "/opt/bloodhound/server/docker-compose.yaml"
+  become: true
+
+- name: "Change BloodHound port from 8080 to 8088"
+  replace:
+    path: "/opt/bloodhound/server/docker-compose.yaml"
+    regexp: '8080:8080'
+    replace: '8088:8080'
+  become: true
+
+- name: Deploy BloodHound using Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "/opt/bloodhound/server"
+    state: present
+  become: true
+
+- name: Wait for BloodHound to be accessible
+  wait_for:
+    host: "localhost"
+    port: 7474
+    delay: 10
+    timeout: 300
+  become: true
+
+- name: Extract BloodHound admin password
+  shell: >
+    docker compose -f /opt/bloodhound/server/docker-compose.yaml logs bloodhound
+    | grep -oP 'Password Set To:\s+\K\S+'
+  register: bloodhound_password
+  args:
+    chdir: "/opt/bloodhound/server"
+  become: true
+
+- name: Store BloodHound credentials
+  copy:
+    content: |
+      username: admin
+      password: {{ bloodhound_password.stdout }}
+    dest: "/opt/bloodhound/server/initial-password.txt"
+  become: true
