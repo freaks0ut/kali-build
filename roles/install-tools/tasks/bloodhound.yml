@@ -9,17 +9,25 @@
     - "/opt/bloodhound/server"
   become: true
 
-- name: Download BloodHound docker-compose file
+- name: "Download BloodHound docker-compose file"
   get_url:
     url: "https://ghst.ly/getbhce"
     dest: "/opt/bloodhound/server/docker-compose.yaml"
   become: true
 
-- name: "Change BloodHound port from 8080 to 8088"
+- name: "Ensure BloodHound does NOT start automatically on system boot"
   replace:
     path: "/opt/bloodhound/server/docker-compose.yaml"
-    regexp: '8080:8080'
-    replace: '8088:8080'
+    regexp: 'restart: always'
+    replace: 'restart: no'
+  become: true
+
+- name: "Change BloodHound port from 8080 to 8088"
+  lineinfile:
+    path: "/opt/bloodhound/server/.env"
+    regexp: '^BLOODHOUND_PORT=.*'
+    line: 'BLOODHOUND_PORT=8088'
+    create: yes
   become: true
 
 - name: Deploy BloodHound using Docker Compose
@@ -36,19 +44,25 @@
     timeout: 300
   become: true
 
-- name: Extract BloodHound admin password
-  shell: >
-    docker compose -f /opt/bloodhound/server/docker-compose.yaml logs bloodhound
-    | grep -oP 'Password Set To:\s+\K\S+'
+- name: "Check if BloodHound password file exists"
+  stat:
+    path: "/opt/bloodhound/server/initial-password.txt"
+  register: password_file
+
+- name: "Extract BloodHound admin password (only if missing)"
+  shell: "docker compose -f /opt/bloodhound/server/docker-compose.yaml logs bloodhound | grep -oP 'Password Set To:\\s+\\K\\S+'"
   register: bloodhound_password
-  args:
-    chdir: "/opt/bloodhound/server"
+  when: not password_file.stat.exists
+  changed_when: false
+  failed_when: bloodhound_password.rc != 0 and bloodhound_password.stdout == ""
   become: true
 
-- name: Store BloodHound credentials
+- name: "Store BloodHound credentials (only if missing)"
   copy:
     content: |
       username: admin
       password: {{ bloodhound_password.stdout }}
     dest: "/opt/bloodhound/server/initial-password.txt"
+  when: not password_file.stat.exists
   become: true
+
