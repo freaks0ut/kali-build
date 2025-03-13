@@ -1,0 +1,52 @@
+- name: Ensure the installation directory exists
+  ansible.builtin.file:
+    path: /opt/tools/web/git-dumper
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0755'
+  become: true
+
+- name: Add /opt/tools/web/git-dumper to Git safe directories
+  ansible.builtin.command:
+    cmd: git config --global --add safe.directory /opt/tools/web/git-dumper
+  changed_when: false
+
+- name: Clone Git Dumper repository
+  ansible.builtin.git:
+    repo: 'https://github.com/arthaud/git-dumper.git'
+    dest: /opt/tools/web/git-dumper
+    version: master
+    force: yes
+  become: true
+
+- name: Ensure Python3 venv is installed (system package)
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+  become: true
+
+- name: Create a Python virtual environment for Git Dumper
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/tools/web/git-dumper/venv
+    creates: /opt/tools/web/git-dumper/venv
+  become: true
+
+- name: Upgrade pip inside virtual environment
+  ansible.builtin.command:
+    cmd: /opt/tools/web/git-dumper/venv/bin/pip install --upgrade pip
+  become: true
+
+- name: Install Git Dumper dependencies inside virtual environment
+  ansible.builtin.command:
+    cmd: /opt/tools/web/git-dumper/venv/bin/pip install -r /opt/tools/web/git-dumper/requirements.txt
+  become: true
+
+- name: Create an executable wrapper for Git Dumper
+  ansible.builtin.copy:
+    dest: /usr/local/bin/git-dumper
+    content: |
+      #!/bin/bash
+      /opt/tools/web/git-dumper/venv/bin/python /opt/tools/web/git-dumper/git_dumper.py "$@"
+    mode: '0755'
+  become: true

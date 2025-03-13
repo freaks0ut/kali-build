@@ -10,10 +10,14 @@
 - name: Include tool installation tasks
   ansible.builtin.include_tasks: "{{ item }}"
   loop:
+    - apt-config.yml
     - vscode.yml
     #- recon.yml
     - web.yml
+    - dirsearch.yml
+    - git-dumper.yml
     #- ad.yml
+    - bloodhound.yml
     #- shells.yml
     #- privilege_escalation.yml
     #- networking.yml
