@@ -85,8 +85,15 @@
   register: final_password_change
   ignore_errors: true
 
-# --- Step 5: Save password file ONLY if password was actually changed ---
-- name: Save the password to a file (only if password was changed)
+# --- Step 4.1: Ensure password file check does not fail ---
+- name: Check if password file already exists
+  stat:
+    path: /opt/tools/ad/bloodhound/created-password.txt
+  register: password_file
+  failed_when: false  # Prevents fatal errors if the file doesn't exist
+
+# --- Step 5: Save password file ONLY if it was changed and does not exist ---
+- name: Save the password to a file (only if password was changed and file does not exist)
   copy:
     content: "{{ neo4j_password }}"
     dest: /opt/tools/ad/bloodhound/created-password.txt
@@ -94,4 +101,8 @@
     group: kali
     mode: '0600'
   become: true
-  when: final_password_change is succeeded or password_change_result is succeeded
+  when:
+    - password_file is defined
+    - not password_file.stat.exists  # Ensures file does not exist
+    - final_password_change is succeeded or password_change_result is succeeded
+  ignore_errors: true  # Silently skip if condition fails
