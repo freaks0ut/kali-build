@@ -1,68 +1,94 @@
 ---
-- name: Create required directories
-  file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-  loop:
-    - "/opt/bloodhound"
-    - "/opt/bloodhound/server"
-  become: true
-
-- name: "Download BloodHound docker-compose file"
-  get_url:
-    url: "https://ghst.ly/getbhce"
-    dest: "/opt/bloodhound/server/docker-compose.yaml"
-  become: true
-
-- name: "Ensure BloodHound does NOT start automatically on system boot"
-  replace:
-    path: "/opt/bloodhound/server/docker-compose.yaml"
-    regexp: 'restart: always'
-    replace: 'restart: no'
-  become: true
-
-- name: "Change BloodHound port from 8080 to 8088"
-  lineinfile:
-    path: "/opt/bloodhound/server/.env"
-    regexp: '^BLOODHOUND_PORT=.*'
-    line: 'BLOODHOUND_PORT=8088'
-    create: yes
-  become: true
-
-- name: Deploy BloodHound using Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: "/opt/bloodhound/server"
+- name: Install required packages for BloodHound
+  apt:
+    name:
+      - bloodhound
+      - neo4j
+      - npm
     state: present
+    update_cache: yes
   become: true
 
-- name: Wait for BloodHound to be accessible
-  wait_for:
-    host: "localhost"
-    port: 7474
-    delay: 10
-    timeout: 300
+- name: Ensure BloodHound directory exists
+  file:
+    path: /opt/tools/ad/bloodhound
+    state: directory
+    owner: kali
+    group: kali
+    mode: '0755'
   become: true
 
-- name: "Check if BloodHound password file exists"
-  stat:
-    path: "/opt/bloodhound/server/initial-password.txt"
-  register: password_file
-
-- name: "Extract BloodHound admin password (only if missing)"
-  shell: "docker compose -f /opt/bloodhound/server/docker-compose.yaml logs bloodhound | grep -oP 'Password Set To:\\s+\\K\\S+'"
-  register: bloodhound_password
-  when: not password_file.stat.exists
+- name: Generate a 20-character secure password
+  shell: tr -dc 'A-Za-z' </dev/urandom | head -c 20
+  register: generated_password
   changed_when: false
-  failed_when: bloodhound_password.rc != 0 and bloodhound_password.stdout == ""
-  become: true
 
-- name: "Store BloodHound credentials (only if missing)"
+- name: Store generated password as a fact
+  set_fact:
+    neo4j_password: "{{ generated_password.stdout }}"
+
+- name: Save the password to a file
   copy:
-    content: |
-      username: admin
-      password: {{ bloodhound_password.stdout }}
-    dest: "/opt/bloodhound/server/initial-password.txt"
-  when: not password_file.stat.exists
+    content: "{{ neo4j_password }}"
+    dest: /opt/tools/ad/bloodhound/created-password.txt
+    owner: kali
+    group: kali
+    mode: '0600'
   become: true
 
+- name: Check if Neo4j is already running
+  shell: "pgrep -f 'neo4j' || true"
+  register: neo4j_running
+  changed_when: false
+
+- name: Start Neo4j if not running
+  shell: "/usr/share/neo4j/bin/neo4j start"
+  become: true
+  when: neo4j_running.stdout == ""
+  register: neo4j_start
+  changed_when: "'started' in neo4j_start.stdout"
+
+- name: Wait for Neo4j to fully start (only if it was just started)
+  pause:
+    seconds: 10
+  when: neo4j_running.stdout == ""
+
+- name: Find cypher-shell path
+  shell: "find / -name cypher-shell 2>/dev/null | head -n 1"
+  register: cypher_shell_path
+  changed_when: false
+
+- name: Fail if cypher-shell is not found
+  fail:
+    msg: "cypher-shell was not found. Ensure Neo4j is installed correctly."
+  when: cypher_shell_path.stdout == ""
+
+# --- Step 1: Attempt to log in and check if password reset is required ---
+- name: Attempt to log into Neo4j
+  shell: "{{ cypher_shell_path.stdout }} -u neo4j -p neo4j --database=system"
+  register: neo4j_login
+  failed_when: false
+  changed_when: false
+
+- name: Debug - Check login status
+  debug:
+    msg: "Neo4j login status: {{ neo4j_login.stderr }}"
+
+# --- Step 2: If password reset is required, handle it interactively ---
+- name: Handle forced password change if required
+  expect:
+    command: /usr/share/neo4j/bin/cypher-shell -u neo4j -p neo4j
+    responses:
+      "Password change required\\s+new password:": "neo4j"
+      "confirm password:": "neo4j"
+  when: "'Password change required' in neo4j_login.stderr"
+  become: true
+  ignore_errors: true
+
+# --- Step 3: Change password to secure one after reset ---
+- name: Set Neo4j password to the secure generated one
+  shell: |
+    echo "ALTER CURRENT USER SET PASSWORD FROM 'neo4j' TO '{{ neo4j_password }}';" | {{ cypher_shell_path.stdout }} -u neo4j -p neo4j --database=system
+  when: "'Password change required' not in neo4j_login.stderr"
+  become: true
+  ignore_errors: true
