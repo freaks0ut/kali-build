@@ -1,3 +1,22 @@
+- name: Install required packages for BloodHound
+  apt:
+    name:
+      - bloodhound
+      - neo4j
+      - npm
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure BloodHound directory exists
+  file:
+    path: /opt/tools/ad/bloodhound
+    state: directory
+    owner: kali
+    group: kali
+    mode: '0755'
+  become: true
+
 - name: Stop Neo4j (if running)
   shell: "sudo neo4j stop || true"
   become: true
@@ -28,14 +47,9 @@
   register: neo4j_logs
   when: neo4j_final_check.stdout == ""
 
-- name: Debug - Neo4j Logs
-  debug:
-    msg: "{{ neo4j_logs.stdout }}"
-  when: neo4j_final_check.stdout == ""
-
 # --- Step 1: Generate Secure Password ---
-- name: Generate a 20-character secure password
-  shell: tr -dc 'A-Za-z' </dev/urandom | head -c 20
+- name: Generate a simple 12-character password (lowercase + numbers)
+  shell: tr -dc 'a-z0-9' </dev/urandom | head -c 12
   register: generated_password
   changed_when: false
 
@@ -49,10 +63,6 @@
   register: neo4j_login
   failed_when: false
   changed_when: false
-
-- name: Debug - Check login status
-  debug:
-    msg: "Neo4j login status: {{ neo4j_login.stderr }}"
 
 # --- Step 3: If password reset is required, handle it interactively ---
 - name: Handle forced password change if required
