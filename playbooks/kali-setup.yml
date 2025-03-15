@@ -7,4 +7,4 @@
     - configure-system
     - wordlists
     - install-tools
-    #- customize-browser
+    - customize-browser
