@@ -18,7 +18,11 @@
     update_cache: yes
   become: true
 
-- name: Install Impacket
+# -----------------------------
+# ✅ Install Impacket in a Virtual Environment
+# -----------------------------
+
+- name: Clone Impacket Repository
   ansible.builtin.git:
     repo: 'https://github.com/fortra/impacket.git'
     dest: /opt/tools/ad/impacket
@@ -26,21 +30,84 @@
     force: yes
   become: true
 
-- name: Install Impacket dependencies
-  ansible.builtin.shell: |
-    cd /opt/tools/ad/impacket
-    /usr/bin/python3 -m pip install -r requirements.txt --break-system-packages
-    /usr/bin/python3 setup.py install
+- name: Ensure Impacket virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/impacket-venv"
+  args:
+    creates: /opt/tools/ad/impacket-venv
   become: true
 
-- name: Ensure Impacket scripts are executable
-  ansible.builtin.file:
-    path: "/opt/tools/ad/impacket/examples/{{ item }}"
-    mode: '0755'
-  loop:
-    - ntlmrelayx.py
-    - secretsdump.py
+- name: Install Impacket dependencies inside virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/impacket-venv/bin/activate
+    pip install --upgrade pip
+    pip install -r /opt/tools/ad/impacket/requirements.txt
+    pip install /opt/tools/ad/impacket
+  args:
+    executable: /bin/bash
   become: true
+
+- name: Remove conflicting files in /usr/local/bin
+  ansible.builtin.file:
+    path: "/usr/local/bin/{{ item }}"
+    state: absent
+  loop:
+    - atexec.py
+    - dcomexec.py
+    - dpapi.py
+    - esentutl.py
+    - getArch.py
+    - GetADUsers.py
+    - getPac.py
+    - getTGT.py
+    - GetUserSPNs.py
+    - karmaSMB.py
+    - mimikatz.py
+    - netview.py
+    - ntlmrelayx.py
+    - psexec.py
+    - rpcdump.py
+    - samrdump.py
+    - secretsdump.py
+    - smbclient.py
+    - smbexec.py
+    - ticketer.py
+    - wmiexec.py
+  become: true
+
+- name: Ensure Impacket scripts are globally accessible
+  ansible.builtin.file:
+    src: "/opt/tools/ad/impacket-venv/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    state: link
+    mode: '0755'
+    force: yes
+  loop:
+    - atexec.py
+    - dcomexec.py
+    - dpapi.py
+    - esentutl.py
+    - getArch.py
+    - GetADUsers.py
+    - getPac.py
+    - getTGT.py
+    - GetUserSPNs.py
+    - karmaSMB.py
+    - mimikatz.py
+    - netview.py
+    - ntlmrelayx.py
+    - psexec.py
+    - rpcdump.py
+    - samrdump.py
+    - secretsdump.py
+    - smbclient.py
+    - smbexec.py
+    - ticketer.py
+    - wmiexec.py
+  loop_control:
+    loop_var: script
+  become: true
+
 
 - name: Install ntlmrelayx from Impacket
   ansible.builtin.file:
@@ -230,3 +297,56 @@
     state: link
     mode: '0755'
   become: true
+
+# -----------------------------
+# ✅ Install PKINITtools Properly
+# -----------------------------
+
+- name: Clone PKINITtools repository
+  ansible.builtin.git:
+    repo: 'https://github.com/dirkjanm/PKINITtools.git'
+    dest: /opt/tools/ad/pkinittools
+    version: master
+    force: yes
+  become: true
+
+- name: Ensure PKINITtools virtual environment exists
+  ansible.builtin.command:
+    cmd: "/usr/bin/python3 -m venv /opt/tools/ad/pkinittools-venv"
+  args:
+    creates: /opt/tools/ad/pkinittools-venv
+  become: true
+
+- name: Install PKINITtools dependencies in the virtual environment
+  ansible.builtin.shell: |
+    source /opt/tools/ad/pkinittools-venv/bin/activate
+    pip install --upgrade pip
+    pip install -r /opt/tools/ad/pkinittools/requirements.txt
+  args:
+    executable: /bin/bash
+  become: true
+  ignore_errors: true  # Ignore if there's no requirements.txt (PKINITtools doesn't have one)
+
+- name: Ensure PKINITtools scripts are executable
+  ansible.builtin.file:
+    path: "/opt/tools/ad/pkinittools/{{ script }}"
+    mode: '0755'
+  loop:
+    - gettgtpkinit.py  # Ensure this script exists
+  loop_control:
+    loop_var: script
+  become: true
+
+- name: Ensure PKINITtools scripts are globally accessible
+  ansible.builtin.file:
+    src: "/opt/tools/ad/pkinittools/{{ script }}"
+    dest: "/usr/local/bin/{{ script | regex_replace('.py$', '') }}"
+    state: link
+    mode: '0755'
+  loop:
+    - gettgtpkinit.py  # Ensure this script exists
+  loop_control:
+    loop_var: script
+  become: true
+
+
