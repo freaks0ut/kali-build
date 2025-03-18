@@ -45,6 +45,7 @@
       - curl
       - gnupg
       - gh
+      - ripgrep
     state: latest
   become: true
 
@@ -96,4 +97,19 @@
     name: docker
     state: started
     enabled: yes
+  become: true
+
+- name: Install cupp3 from APT
+  ansible.builtin.apt:
+    name: cupp3
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure cupp3 is accessible as "cupp"
+  ansible.builtin.file:
+    src: /usr/bin/cupp3
+    dest: /usr/local/bin/cupp
+    state: link
+    mode: '0755'
   become: true
