@@ -22,6 +22,12 @@
 # ✅ Install Impacket in a Virtual Environment
 # -----------------------------
 
+- name: Ensure Python venv module is installed
+  ansible.builtin.package:
+    name: python3-venv
+    state: present
+  become: true
+
 - name: Clone Impacket Repository
   ansible.builtin.git:
     repo: 'https://github.com/fortra/impacket.git'
@@ -38,47 +44,29 @@
   become: true
 
 - name: Install Impacket dependencies inside virtual environment
-  ansible.builtin.shell: |
-    source /opt/tools/ad/impacket-venv/bin/activate
-    pip install --upgrade pip
-    pip install -r /opt/tools/ad/impacket/requirements.txt
-    pip install /opt/tools/ad/impacket
-  args:
-    executable: /bin/bash
+  ansible.builtin.pip:
+    requirements: /opt/tools/ad/impacket/requirements.txt
+    virtualenv: /opt/tools/ad/impacket-venv
+    virtualenv_command: /usr/bin/python3 -m venv
   become: true
 
-- name: Remove conflicting files in /usr/local/bin
-  ansible.builtin.file:
-    path: "/usr/local/bin/{{ item }}"
-    state: absent
-  loop:
-    - atexec.py
-    - dcomexec.py
-    - dpapi.py
-    - esentutl.py
-    - getArch.py
-    - GetADUsers.py
-    - getPac.py
-    - getTGT.py
-    - GetUserSPNs.py
-    - karmaSMB.py
-    - mimikatz.py
-    - netview.py
-    - ntlmrelayx.py
-    - psexec.py
-    - rpcdump.py
-    - samrdump.py
-    - secretsdump.py
-    - smbclient.py
-    - smbexec.py
-    - ticketer.py
-    - wmiexec.py
+- name: Install Impacket inside virtual environment
+  ansible.builtin.pip:
+    name: /opt/tools/ad/impacket
+    virtualenv: /opt/tools/ad/impacket-venv
   become: true
 
-- name: Ensure Impacket scripts are globally accessible
+- name: Ensure /usr/local/bin exists
   ansible.builtin.file:
-    src: "/opt/tools/ad/impacket-venv/bin/{{ item }}"
-    dest: "/usr/local/bin/{{ item }}"
+    path: /usr/local/bin
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Ensure Impacket scripts are globally accessible with 'impacket-' prefix
+  ansible.builtin.file:
+    src: "/opt/tools/ad/impacket-venv/bin/{{ script }}"
+    dest: "/usr/local/bin/impacket-{{ script | regex_replace('\\.py$', '') }}"
     state: link
     mode: '0755'
     force: yes
