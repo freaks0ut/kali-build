@@ -16,6 +16,7 @@
     - dirsearch.yml
     - git-dumper.yml
     - ad.yml
+    - brute-forcing.yml
     - bloodhound.yml
     # - recon.yml
     #- shells.yml
