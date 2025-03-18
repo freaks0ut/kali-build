@@ -290,6 +290,12 @@
 # ✅ Install PKINITtools Properly
 # -----------------------------
 
+- name: Ensure Python venv module is installed
+  ansible.builtin.package:
+    name: python3-venv
+    state: present
+  become: true
+
 - name: Clone PKINITtools repository
   ansible.builtin.git:
     repo: 'https://github.com/dirkjanm/PKINITtools.git'
@@ -306,33 +312,35 @@
   become: true
 
 - name: Install PKINITtools dependencies in the virtual environment
-  ansible.builtin.shell: |
-    source /opt/tools/ad/pkinittools-venv/bin/activate
-    pip install --upgrade pip
-    pip install -r /opt/tools/ad/pkinittools/requirements.txt
-  args:
-    executable: /bin/bash
+  ansible.builtin.pip:
+    virtualenv: /opt/tools/ad/pkinittools-venv
+    virtualenv_command: /usr/bin/python3 -m venv
+    requirements: /opt/tools/ad/pkinittools/requirements.txt
   become: true
-  ignore_errors: true  # Ignore if there's no requirements.txt (PKINITtools doesn't have one)
+  ignore_errors: true  # Ignore if there's no requirements.txt
 
 - name: Ensure PKINITtools scripts are executable
   ansible.builtin.file:
     path: "/opt/tools/ad/pkinittools/{{ script }}"
     mode: '0755'
   loop:
-    - gettgtpkinit.py  # Ensure this script exists
+    - gettgtpkinit.py
+    - getnthash.py
+    - gets4uticket.py
   loop_control:
     loop_var: script
   become: true
 
-- name: Ensure PKINITtools scripts are globally accessible
+- name: Ensure PKINITtools scripts are globally accessible with 'pkinit-' prefix
   ansible.builtin.file:
     src: "/opt/tools/ad/pkinittools/{{ script }}"
-    dest: "/usr/local/bin/{{ script | regex_replace('.py$', '') }}"
+    dest: "/usr/local/bin/pkinit-{{ script | regex_replace('\\.py$', '') }}"
     state: link
     mode: '0755'
   loop:
-    - gettgtpkinit.py  # Ensure this script exists
+    - gettgtpkinit.py
+    - getnthash.py
+    - gets4uticket.py
   loop_control:
     loop_var: script
   become: true
