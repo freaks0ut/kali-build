@@ -1,0 +1,60 @@
+- name: Ensure brute-forcing tools directory exists
+  ansible.builtin.file:
+    path: /opt/tools/brute-forcing
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0755'
+
+# -----------------------------
+# ✅ Install cupp3
+# -----------------------------
+- name: Install cupp3 from APT
+  ansible.builtin.apt:
+    name: cupp3
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure cupp3 is accessible as "cupp"
+  ansible.builtin.file:
+    src: /usr/bin/cupp3
+    dest: /usr/local/bin/cupp
+    state: link
+    mode: '0755'
+  become: true
+
+# -----------------------------
+# ✅ Install Perl (Required for Username Anarchy)
+# -----------------------------
+- name: Ensure Perl is installed
+  ansible.builtin.apt:
+    name: perl
+    state: present
+    update_cache: yes
+  become: true
+
+# -----------------------------
+# ✅ Install Username Anarchy
+# -----------------------------
+- name: Clone Username Anarchy repository
+  ansible.builtin.git:
+    repo: 'https://github.com/urbanadventurer/username-anarchy.git'
+    dest: /opt/tools/brute-forcing/username-anarchy
+    version: master
+    force: yes
+  become: true
+
+- name: Ensure username-anarchy script is executable
+  ansible.builtin.file:
+    path: "/opt/tools/brute-forcing/username-anarchy/username-anarchy"
+    mode: '0755'
+  become: true
+
+- name: Ensure username-anarchy is globally accessible
+  ansible.builtin.file:
+    src: "/opt/tools/brute-forcing/username-anarchy/username-anarchy"
+    dest: "/usr/local/bin/username-anarchy"
+    state: link
+    mode: '0755'
+  become: true
