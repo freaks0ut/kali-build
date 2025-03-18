@@ -358,8 +358,15 @@
 
 - name: Copy SharpGPOAbuse.zip to AD directory
   ansible.builtin.copy:
-    src: files/SharpGPOAbuse.zip
+    src: "{{ playbook_dir }}/../roles/install-tools/files/SharpGPOAbuse.zip"
     dest: /opt/tools/ad/SharpGPOAbuse.zip
+    mode: '0644'
+  become: true
+
+- name: Copy RunAsCs.zip to AD directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../roles/install-tools/files/RunasCs.zip"
+    dest: /opt/tools/ad/RunasCs.zip
     mode: '0644'
   become: true
 
@@ -371,16 +378,9 @@
     mode: '0755'
   become: true
 
-- name: Copy RunAs.zip to AD directory
-  ansible.builtin.copy:
-    src: files/RunAs.zip
-    dest: /opt/tools/ad/RunAs.zip
-    mode: '0644'
-  become: true
-
 - name: Extract RunAs.zip
   ansible.builtin.unarchive:
-    src: /opt/tools/ad/RunAs.zip
+    src: /opt/tools/ad/RunasCs.zip
     dest: /opt/tools/ad/
     remote_src: yes
     mode: '0755'
