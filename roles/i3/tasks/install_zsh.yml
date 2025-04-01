@@ -32,4 +32,11 @@
     update: yes
   loop: "{{ zsh_plugins }}"
 
-
+- name: Ensure zsh plugins are enabled in .zshrc
+  become: yes
+  become_user: kali
+  lineinfile:
+    path: "/home/kali/.zshrc"
+    regexp: '^plugins='
+    line: "plugins=({{ zsh_plugins | join(' ') }} git)"
+    backrefs: yes
